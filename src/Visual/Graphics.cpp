@@ -157,21 +157,21 @@ bool Graphics::BInitGL(bool fullscreen){
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	// setup scene geometry
-	skyboxShaderProg = BCreateSceneShaders("skybox");
-	if(skyboxShaderProg == NULL){
-		std::cout << "skyboxShaderProg returned NULL: Graphics::BInitGL" << std::endl;
-		return false;
-	}
+	//skyboxShaderProg = BCreateSceneShaders("skybox");
+	//if(skyboxShaderProg == NULL){
+	//	std::cout << "skyboxShaderProg returned NULL: Graphics::BInitGL" << std::endl;
+	//	return false;
+	//}
 	//soundObjShaderProg = BCreateSceneShaders("soundObj");
 	//if(soundObjShaderProg == NULL){
 	//	std::cout << "soundObjShaderProg returned NULL: Graphics::BInitGL" << std::endl;
 	//	return false;
 	//}
-	groundPlaneShaderProg = BCreateSceneShaders("groundPlane");
-	if(groundPlaneShaderProg == NULL){
-		std::cout << "groundPlaneShaderProg returned NULL: Graphics::BInitGL" << std::endl;
-		return false;
-	}
+	//groundPlaneShaderProg = BCreateSceneShaders("groundPlane");
+	//if(groundPlaneShaderProg == NULL){
+	//	std::cout << "groundPlaneShaderProg returned NULL: Graphics::BInitGL" << std::endl;
+	//	return false;
+	//}
 	//fiveCellShaderProg = BCreateSceneShaders("rasterPolychoron");
 	//if(fiveCellShaderProg == NULL){
 	//	std::cout << "fiveCellShaderProg returned NULL: Graphics::BInitGL" << std::endl;
@@ -188,7 +188,7 @@ bool Graphics::BInitGL(bool fullscreen){
 		return false;
 	}
 	std::string csdFileName = "sculpture2.csd";
-	if(!fiveCell.setup(csdFileName, skyboxShaderProg, soundObjShaderProg, groundPlaneShaderProg, fiveCellShaderProg, quadShaderProg)) {
+	if(!fiveCell.setup(csdFileName)) {
 		std::cout << "fiveCell setup failed: Graphics BInitGL" << std::endl;
 		return false;
 	}
@@ -1112,7 +1112,7 @@ void Graphics::RenderScene(vr::Hmd_Eye nEye, std::unique_ptr<VR_Manager>& vrm)
 	}
 
 	//draw fiveCell scene
-	fiveCell.draw(skyboxShaderProg, groundPlaneShaderProg, soundObjShaderProg, fiveCellShaderProg, quadShaderProg, currentProjMatrix, currentViewMatrix, currentEyeMatrix, raymarchData, mengerShaderProg, infiniteProjMatrix);
+	fiveCell.draw(currentProjMatrix, currentViewMatrix, currentEyeMatrix, raymarchData, mengerShaderProg, infiniteProjMatrix);
 
 }
 

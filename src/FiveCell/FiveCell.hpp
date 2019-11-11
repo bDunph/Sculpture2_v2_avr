@@ -1,7 +1,6 @@
 #ifndef FIVE_CELL_HPP
 #define FIVE_CELL_HPP
 
-//#include "Skybox.hpp"
 #define NUM_RAYS 5 
 #define MAX_MANDEL_STEPS 512 
 
@@ -25,7 +24,6 @@ public:
 	struct RaymarchData{
 		float tanFovYOver2;
 		float aspect;
-		//float modAngle;
 	};
 
 	//bools to control machine learning
@@ -41,112 +39,30 @@ public:
 		bool bLoadModel;
 	};
 
-	bool setup(std::string csd, GLuint skyboxProg, GLuint soundObjProg, GLuint groundPlaneProg, GLuint fiveCellProg, GLuint quadShaderProg);
+	bool setup(std::string csd);
 	bool BSetupRaymarchQuad(GLuint shaderProg);
-	//float cubeSDF(glm::vec3 samplePoint);
-	//float distanceToObject(glm::vec3 origin, glm::vec3 direction);
 	void update(glm::mat4 projMat, glm::mat4 viewMat, glm::mat4 eyeMat, glm::vec3 camFront, glm::vec3 camPos, MachineLearning& machineLearning, glm::mat4 infProjMat);
-	void draw(GLuint skyboxProg, GLuint groundPlaneProg, GLuint soundObjProg, GLuint fiveCellProg, GLuint quadShaderProg, glm::mat4 projMat, glm::mat4 viewMat, glm::mat4 eyeMat, RaymarchData& raymarchData, GLuint mengerProg, glm::mat4 infProjMat);
+	void draw(glm::mat4 projMat, glm::mat4 viewMat, glm::mat4 eyeMat, RaymarchData& raymarchData, GLuint mengerProg, glm::mat4 infProjMat);
 	void exit();
 
 private:
 
 	glm::vec4 cameraPos;
 	glm::vec3 camPosPerEye;
-	//glm::vec3 cameraFront;
-	//glm::vec3 cameraUp;
 	float deltaTime;
 	float lastFrame;
 	float currentFrame;
-	//bool needDraw;
-	//float radius;
-
-	//ground plane
-	GLuint groundVAO;
-	GLuint groundIndexBuffer;
-
-	GLint ground_projMatLoc;
-	GLint ground_viewMatLoc;
-	GLint ground_modelMatLoc;
-	GLint ground_lightPosLoc;
-	GLint ground_light2PosLoc;
-	GLint ground_cameraPosLoc;
-	GLint ground_MVEPLoc;
-	GLint ground_InvMVEPLoc;
-	GLint ground_InfProjLoc;
-	GLint ground_texLoc;
-
-	GLint ground_lightDirLoc;
-	GLint ground_lightColourLoc;
-	GLint ground_lightAmbientLoc;
-	GLint ground_lightDiffuseLoc;
-	GLint ground_lightSpecularLoc;
-	
-	GLint ground_materialSpecularLoc;
-	GLint ground_materialShininessLoc;
-
-	GLuint groundTexture;
-
-	//fivecell 
-	glm::vec4 vertArray5Cell[5];
-	GLuint vao;
-	GLuint index;
-	GLuint lineIndex;
-
-	GLint projMatLoc;
-	GLint viewMatLoc;
-	GLint fiveCellModelMatLoc;
-	GLint rotationZWLoc;
-	GLint rotationXWLoc;
-	GLint lightPosLoc;
-	GLint light2PosLoc;
-	GLint alphaLoc;	
-	GLint cameraPosLoc;
-
-	glm::mat4 rotationZW;
-	glm::mat4 rotationXW; 
-	glm::mat4 rotationYW; 
 
 	//matrices 
 	glm::mat4 modelMatrix;
 	glm::mat4 scale5CellMatrix;
 	glm::mat4 fiveCellModelMatrix;
 	glm::mat4 groundModelMatrix;
-	//glm::mat4 quadModelMatrix;
 	glm::mat4 skyboxModelMatrix;
 
 	//lights
 	glm::vec3 lightPos;
 	glm::vec3 light2Pos;
-
-	//SoundObjects
-	SoundObject soundObjects [5];
-	float vertRms [5];
-
-	//Skybox
-	//Skybox skybox;
-	//GLuint skyboxShaderProg;
-	GLuint skyboxVAO;	
-	unsigned int skyboxTexID;
-	GLuint skyboxIndexBuffer;
-
-	GLint skybox_projMatLoc;
-	GLint skybox_viewMatLoc;
-	GLint skybox_modelMatLoc;
-
-	GLint skybox_texUniformLoc;
-
-	//quad
-	//GLuint quadVAO;
-	//GLuint quadIndexBuffer;
-	//unsigned int quadTexID;
-
-	//GLint quad_projMatLoc;
-	//GLint quad_viewMatLoc;
-	//GLint quad_modelMatLoc;
-	//GLint quad_lightPosLoc;
-	//GLint quad_light2PosLoc;
-	//GLint quad_cameraPosLoc;
 
 	//Csound
 	CsoundSession *session;
@@ -155,12 +71,8 @@ private:
 	MYFLT* m_pRmsOut;
 	MYFLT* m_cspSineControlVal;
 	MYFLT* m_cspMandelEscapeVals[MAX_MANDEL_STEPS];
-	//MYFLT* m_cspMandelEscapeVal;
 	MYFLT* m_cspMandelEscapeIndex;
-	//MYFLT* m_cspMandelMaxPoints;
 	MYFLT* m_cspMaxSteps;
-
-	//float m_iEscapeVals[NUM_RAYS][MAX_MANDEL_STEPS];
 
 	//raymarching quad
 	unsigned int m_uiNumSceneVerts;
