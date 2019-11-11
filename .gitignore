@@ -1,0 +1,6 @@
+build/*
+data/*
+include/*
+.DS_Store
+bin/*
+lib/*
