@@ -777,6 +777,7 @@ bool Graphics::BRenderFrame(std::unique_ptr<VR_Manager>& vrm)
 		RenderControllerAxes(vrm);
 		RenderStereoTargets(vrm);
 		RenderCompanionWindow();
+		//********** ReadDataTexture() ***************
 
 		vr::Texture_t leftEyeTexture = {(void*)(uintptr_t)leftEyeDesc.m_nResolveTextureId, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 		vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
@@ -789,6 +790,7 @@ bool Graphics::BRenderFrame(std::unique_ptr<VR_Manager>& vrm)
 		DevProcessInput(m_pGLContext);
 		RenderStereoTargets(vrm);
 		RenderCompanionWindow();
+		//**** ReadDataTexture()*******************
 		m_fLastFrame = currentFrame;
 	} else if(!m_bDevMode && vrm == nullptr){
 		std::cout << "ERROR: vrm not assigned : RenderFrame()" << std::endl;
