@@ -201,15 +201,8 @@ bool Graphics::BInitGL(bool fullscreen){
 	if(m_bDevMode){
 		m_fFov = 45.0f;
 		m_matDevProjMatrix = glm::perspective(m_fFov, (float)m_nCompanionWindowWidth/ (float)m_nCompanionWindowHeight, 0.1f, 10000.0f);
-		//m_matDevProjMatrix_InfiniteFarPlane = glm::perspective(m_fFov, (float)m_nCompanionWindowWidth / (float)m_nCompanionWindowHeight, 0.1f, 0.0f);
 		float r = m_nCompanionWindowWidth * 0.5f;
 		float t = m_nCompanionWindowHeight * 0.5f;
-		m_matDevProjMatrix_InfiniteFarPlane = glm::mat4(
-			0.1f/r, 0.0f, 0.0f, 0.0f,
-			0.0f, 0.1f/t, 0.0f, 0.0f,
-			0.0f, 0.0f, -1.0f, -2.0f*0.1f,
-			0.0f, 0.0f, -1.0f, 0.0f
-		);
 		
 		//variables for view matrix
 		m_vec3DevCamPos = glm::vec3(0.0f, 1.0f, -1.0f);	
@@ -392,7 +385,7 @@ bool Graphics::BCreateDefaultShaders()
 			// fragment shader
 			"#version 410\n"
 			"in vec4 v4Color;\n"
-			"out vec4 outputColor;\n"
+			"layout(location = 0) out vec4 outputColor;\n"
 			"void main()\n"
 			"{\n"
 			"   outputColor = v4Color;\n"
@@ -425,7 +418,7 @@ bool Graphics::BCreateDefaultShaders()
 			"#version 410 core\n"
 			"uniform sampler2D diffuse;\n"
 			"in vec2 v2TexCoord;\n"
-			"out vec4 outputColor;\n"
+			"layout(location = 0) out vec4 outputColor;\n"
 			"void main()\n"
 			"{\n"
 			"   outputColor = texture( diffuse, v2TexCoord);\n"
@@ -576,6 +569,41 @@ bool Graphics::BCreateFrameBuffer(FramebufferDesc& framebufferDesc)
 	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA8, m_nRenderWidth, m_nRenderHeight, true);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, framebufferDesc.m_nRenderTextureId, 0);
 
+	//create a texture to hold data from shader and attach to gl_color_attachment1
+	glGenTextures(1, &framebufferDesc.m_gluiDataTextureID);
+	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, framebufferDesc.m_gluiDataTextureID);
+	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_R32F, m_nRenderWidth, m_nRenderHeight, true); 
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D_MULTISAMPLE, framebufferDesc.m_gluiDataTextureID, 0);
+
+	//check FBO status before setting up m_nResolveFramebufferId
+	auto status1 = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (status1 != GL_FRAMEBUFFER_COMPLETE)
+	{
+		std::cout << "Error: m_nRenderFramebuffer not created : " << std::to_string(status1) << " -- Graphics::BCreateFrameBuffer" << std::endl;
+
+		if(status1 == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT){
+			std::cout << "ERROR: Incomplete Attachment" << std::endl;
+		} else if(status1 == GL_FRAMEBUFFER_UNDEFINED){
+			std::cout << "ERROR: Undefined" << std::endl;
+		} else if(status1 == GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT){
+			std::cout << "ERROR: Incomplete Missing Attachment" << std::endl;
+		} else if(status1 == GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER){
+			std::cout << "ERROR: Incomplete Draw Buffer" << std::endl;
+		} else if(status1 == GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER){
+			std::cout << "ERROR: Incomplete Read Buffer" << std::endl;
+		} else if(status1 == GL_FRAMEBUFFER_UNSUPPORTED){
+			std::cout << "ERROR: Unsupported" << std::endl;
+		} else if(status1 == GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE){
+			std::cout << "ERROR: Incomplete Multisample" << std::endl;
+		} else if(status1 == GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS){
+			std::cout << "ERROR: Incomplete Layer Targets" << std::endl;
+		}
+
+		return false;
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 	glGenFramebuffers(1, &framebufferDesc.m_nResolveFramebufferId );
 	glBindFramebuffer(GL_FRAMEBUFFER, framebufferDesc.m_nResolveFramebufferId);
 
@@ -587,10 +615,10 @@ bool Graphics::BCreateFrameBuffer(FramebufferDesc& framebufferDesc)
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, framebufferDesc.m_nResolveTextureId, 0);
 
 	// check FBO status
-	auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	if (status != GL_FRAMEBUFFER_COMPLETE)
+	auto status2 = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (status2 != GL_FRAMEBUFFER_COMPLETE)
 	{
-		std::cout << "Error: Frame buffer not created : " << std::to_string(status) << " -- Graphics::BCreateFrameBuffer" << std::endl;
+		std::cout << "Error: m_nResolveFramebuffer not created : " << std::to_string(status2) << " -- Graphics::BCreateFrameBuffer" << std::endl;
 		return false;
 	}
 
@@ -761,14 +789,34 @@ void Graphics::DevProcessInput(GLFWwindow *window){
 		machineLearning.bLoadTrainingData = false;
 	}
 }
+
+//-----------------------------------------------------------------------------
+// Update eye independent values before scene is rendered
+//-----------------------------------------------------------------------------
+void Graphics::UpdateSceneData(std::unique_ptr<VR_Manager>& vrm){
+
+	glm::vec3 cameraPosition;
+
+	if(!m_bDevMode){
+		m_mat4CurrentViewMatrix = vrm->GetCurrentViewMatrix();
+		cameraPosition = glm::vec3(m_mat4CurrentViewMatrix[3][0], m_mat4CurrentViewMatrix[3][1], m_mat4CurrentViewMatrix[3][2]);
+	} else {
+		m_matDevViewMatrix = glm::lookAt(m_vec3DevCamPos, m_vec3DevCamPos + m_vec3DevCamFront, m_vec3DevCamUp);	
+		m_mat4CurrentViewMatrix = m_matDevViewMatrix;
+		cameraPosition = m_vec3DevCamPos;
+	}
+
+	//update variables for fiveCell
+	fiveCell.update(m_mat4CurrentViewMatrix, cameraPosition, machineLearning);
+}
+
 //-----------------------------------------------------------------------------
 // Main function that renders textures to hmd.
 //-----------------------------------------------------------------------------
 bool Graphics::BRenderFrame(std::unique_ptr<VR_Manager>& vrm)
 {
-	//update values from controller actions
-	//if(vrm->BGetRotate3DTrigger()) IncreaseRotationValue(m_pRotationVal);
-	//if(vrm->BGetRotate3DTrigger()) machineLearning.bRandomParams = true;
+	//update eye independent values for the scene before rendering
+	UpdateSceneData(vrm);
 
 	// for now as fast as possible
 	if ( !m_bDevMode && vrm->m_pHMD )
@@ -964,8 +1012,11 @@ void Graphics::RenderStereoTargets(std::unique_ptr<VR_Manager>& vrm)
 	//glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glEnable(GL_MULTISAMPLE);
 
+	const GLenum buffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+
 	// Left Eye
 	glBindFramebuffer(GL_FRAMEBUFFER, leftEyeDesc.m_nRenderFramebufferId);
+	glDrawBuffers(2, buffers);
  	glViewport(0, 0, m_nRenderWidth, m_nRenderHeight);
  	RenderScene(vr::Eye_Left, vrm);
  	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -986,6 +1037,7 @@ void Graphics::RenderStereoTargets(std::unique_ptr<VR_Manager>& vrm)
 		
 		// Right Eye
 		glBindFramebuffer(GL_FRAMEBUFFER, rightEyeDesc.m_nRenderFramebufferId);
+		glDrawBuffers(2, buffers);
 		glViewport(0, 0, m_nRenderWidth, m_nRenderHeight);
 		RenderScene(vr::Eye_Right, vrm);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1009,11 +1061,9 @@ void Graphics::RenderScene(vr::Hmd_Eye nEye, std::unique_ptr<VR_Manager>& vrm)
 {
 
 	glm::mat4 currentProjMatrix;
-	glm::mat4 infiniteProjMatrix;
-	glm::mat4 currentViewMatrix;
 	glm::mat4 currentEyeMatrix;
 	glm::vec3 cameraFront;
-	glm::vec3 cameraPosition;
+	//glm::vec3 cameraPosition;
 
 	//glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1021,23 +1071,21 @@ void Graphics::RenderScene(vr::Hmd_Eye nEye, std::unique_ptr<VR_Manager>& vrm)
 
 	if(!m_bDevMode){
 		currentProjMatrix = vrm->GetCurrentProjectionMatrix(nEye);
-		currentViewMatrix = vrm->GetCurrentViewMatrix(nEye);
+		//currentViewMatrix = vrm->GetCurrentViewMatrix();
 		currentEyeMatrix = vrm->GetCurrentEyeMatrix(nEye);
 		cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-		cameraPosition = glm::vec3(currentViewMatrix[3][0], currentViewMatrix[3][1], currentViewMatrix[3][2]);
+		//cameraPosition = glm::vec3(currentViewMatrix[3][0], currentViewMatrix[3][1], currentViewMatrix[3][2]);
 
 		glm::vec4 m_vFarPlaneDimensions = vrm->GetFarPlaneDimensions(nEye);
 		raymarchData.tanFovYOver2 = m_vFarPlaneDimensions.w;
-		infiniteProjMatrix = glm::mat4(1.0f);
 	} else {
 		//*** put manual matrices here***//
 		currentProjMatrix = m_matDevProjMatrix;  
-		infiniteProjMatrix = m_matDevProjMatrix_InfiniteFarPlane;
-		m_matDevViewMatrix = glm::lookAt(m_vec3DevCamPos, m_vec3DevCamPos + m_vec3DevCamFront, m_vec3DevCamUp);	
-		currentViewMatrix = m_matDevViewMatrix;
+		//m_matDevViewMatrix = glm::lookAt(m_vec3DevCamPos, m_vec3DevCamPos + m_vec3DevCamFront, m_vec3DevCamUp);	
+		//currentViewMatrix = m_matDevViewMatrix;
 		currentEyeMatrix = glm::mat4(1.0f);
 		cameraFront = m_vec3DevCamFront;
-		cameraPosition = m_vec3DevCamPos;
+		//cameraPosition = m_vec3DevCamPos;
 
 		double fovYRadians = m_fFov * (PI / 180.0f);
 		//raymarchData.tanFovYOver2 = atan2(fovYRadians, 1.0f);		
@@ -1053,31 +1101,11 @@ void Graphics::RenderScene(vr::Hmd_Eye nEye, std::unique_ptr<VR_Manager>& vrm)
 	////********* continue here - need to grab some audio and visual parameters and add to output vector *************//
 	//}
 
-	////draw texture quad
-	//glBindVertexArray(quadVAO);
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quadIndexBuffer); 
-	//glUseProgram(quadShaderProg);
-
-	//glUniformMatrix4fv(quad_projMatLoc, 1, GL_FALSE, &currentProjMatrix[0][0]);
-	//glUniformMatrix4fv(quad_viewMatLoc, 1, GL_FALSE, &viewEyeMatrix[0][0]);
-	//glUniformMatrix4fv(quad_modelMatLoc, 1, GL_FALSE, &quadModelMatrix[0][0]);
-	////glUniform3f(ground_lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
-	////glUniform3f(ground_light2PosLoc, light2Pos.x, light2Pos.y, light2Pos.z);
-	////glUniform3f(ground_cameraPosLoc, camPosPerEye.x, camPosPerEye.y, camPosPerEye.z);
-
-	//glDrawElements(GL_TRIANGLES, 6 * sizeof(unsigned int), GL_UNSIGNED_INT, (void*)0);
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	//glBindVertexArray(0);
-
 	//update stuff for raymarching shader
-
 	raymarchData.aspect = static_cast<float>(m_nRenderWidth) / static_cast<float>(m_nRenderHeight);
 
-	//double secondsElapsed = difftime(time(0), m_tStartTime);
-	//raymarchData.modAngle = fmod((float)glfwGetTime(), 360.0); 	
-
 	//update variables for fiveCell
-	fiveCell.update(currentProjMatrix, currentViewMatrix, currentEyeMatrix, cameraFront, cameraPosition, machineLearning, infiniteProjMatrix);
+	//fiveCell.update(currentViewMatrix, cameraPosition, machineLearning);
 	
 	// draw controllers before scene	
 	if(!m_bDevMode && vrm){
@@ -1114,7 +1142,7 @@ void Graphics::RenderScene(vr::Hmd_Eye nEye, std::unique_ptr<VR_Manager>& vrm)
 	}
 
 	//draw fiveCell scene
-	fiveCell.draw(currentProjMatrix, currentViewMatrix, currentEyeMatrix, raymarchData, mengerShaderProg, infiniteProjMatrix);
+	fiveCell.draw(currentProjMatrix, m_mat4CurrentViewMatrix, currentEyeMatrix, raymarchData, mengerShaderProg);
 
 }
 

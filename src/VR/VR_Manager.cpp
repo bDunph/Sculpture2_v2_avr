@@ -535,7 +535,7 @@ glm::mat4 VR_Manager::GetCurrentViewEyeMatrix(vr::Hmd_Eye nEye)
 //------------------------------------------------------------------------------
 // Gets current View Matrix.
 // -----------------------------------------------------------------------------
-glm::mat4 VR_Manager::GetCurrentViewMatrix(vr::Hmd_Eye nEye)
+glm::mat4 VR_Manager::GetCurrentViewMatrix()
 {
 	glm::mat4 matV = m_mat4HMDPose;
 	return matV;

@@ -30,6 +30,7 @@ public:
 	//void DevMouseCallback(GLFWwindow* window, double xpos, double ypos);
 	void GetControllerEvents(std::unique_ptr<VR_Manager>& vrm);
 	void DevProcessInput(GLFWwindow *window);
+	void UpdateSceneData(std::unique_ptr<VR_Manager>& vrm);
 	bool BRenderFrame(std::unique_ptr<VR_Manager>& vrm);
 	void RenderControllerAxes(std::unique_ptr<VR_Manager>& vrm);
 	void RenderStereoTargets(std::unique_ptr<VR_Manager>& vrm);
@@ -39,9 +40,9 @@ public:
 	bool TempEsc();
 	void IncreaseRotationValue(std::unique_ptr<int>& pVal);
 
-	
-
 private:
+
+	glm::mat4 m_mat4CurrentViewMatrix;
 
 	glm::vec4 m_vFarPlaneDimensions;
 
@@ -52,6 +53,7 @@ private:
 		GLuint m_nRenderFramebufferId;
 		GLuint m_nResolveTextureId;
 		GLuint m_nResolveFramebufferId;
+		GLuint m_gluiDataTextureID;
 	};
 	FramebufferDesc leftEyeDesc;
 	FramebufferDesc rightEyeDesc;

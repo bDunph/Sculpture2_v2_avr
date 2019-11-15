@@ -244,17 +244,16 @@ bool FiveCell::BSetupRaymarchQuad(GLuint shaderProg)
 //*******************************************************************************************
 // Update Stuff Here
 //*******************************************************************************************
-void FiveCell::update(glm::mat4 projMat, glm::mat4 viewMat, glm::mat4 eyeMat, glm::vec3 camFront, glm::vec3 camPos, MachineLearning& machineLearning, glm::mat4 infProjMat){
-
+void FiveCell::update(glm::mat4 viewMat, glm::vec3 camPos, MachineLearning& machineLearning){
 
 	//rms value from Csound
 	modulateVal = *m_pRmsOut;			
 	
 	//matrices for raymarch shaders
-	modelViewEyeMat = eyeMat * viewMat * raymarchQuadModelMatrix;
-	inverseMVEMat = glm::inverse(modelViewEyeMat);
-	modelViewEyeProjectionMat = projMat * eyeMat * viewMat * raymarchQuadModelMatrix;
-	inverseMVEPMat = glm::inverse(modelViewEyeProjectionMat);
+	//modelViewEyeMat = eyeMat * viewMat * raymarchQuadModelMatrix;
+	//inverseMVEMat = glm::inverse(modelViewEyeMat);
+	//modelViewEyeProjectionMat = projMat * eyeMat * viewMat * raymarchQuadModelMatrix;
+	//inverseMVEPMat = glm::inverse(modelViewEyeProjectionMat);
 
 	glm::vec4 mengerPosition = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 	glm::mat4 mengerModelMatrix = glm::mat4(1.0f);		
@@ -642,8 +641,13 @@ for(int y = 0; y < NUM_RAYS; y++){
 //*********************************************************************************************
 // Draw Stuff Here
 //*********************************************************************************************
-void FiveCell::draw(glm::mat4 projMat, glm::mat4 viewMat, glm::mat4 eyeMat, RaymarchData& raymarchData, GLuint mengerProg, glm::mat4 infProjMat){
+void FiveCell::draw(glm::mat4 projMat, glm::mat4 viewMat, glm::mat4 eyeMat, RaymarchData& raymarchData, GLuint mengerProg){
 		
+	//matrices for raymarch shaders
+	modelViewEyeMat = eyeMat * viewMat * raymarchQuadModelMatrix;
+	inverseMVEMat = glm::inverse(modelViewEyeMat);
+	modelViewEyeProjectionMat = projMat * eyeMat * viewMat * raymarchQuadModelMatrix;
+	inverseMVEPMat = glm::inverse(modelViewEyeProjectionMat);
 
 	glm::mat4 viewEyeMat = eyeMat * viewMat;
 	

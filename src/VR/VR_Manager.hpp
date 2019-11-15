@@ -34,7 +34,7 @@ public:
 	glm::mat4 GetHMDMatrixPoseEye(vr::Hmd_Eye nEye);
 	glm::mat4 GetCurrentViewProjectionMatrix(vr::Hmd_Eye nEye);
 	glm::mat4 GetCurrentViewEyeMatrix(vr::Hmd_Eye nEye);
-	glm::mat4 GetCurrentViewMatrix(vr::Hmd_Eye nEye);
+	glm::mat4 GetCurrentViewMatrix();
 	glm::mat4 GetCurrentProjectionMatrix(vr::Hmd_Eye nEye);
 	glm::mat4 GetCurrentEyeMatrix(vr::Hmd_Eye nEye);
 

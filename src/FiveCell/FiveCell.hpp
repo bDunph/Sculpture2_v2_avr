@@ -41,8 +41,8 @@ public:
 
 	bool setup(std::string csd);
 	bool BSetupRaymarchQuad(GLuint shaderProg);
-	void update(glm::mat4 projMat, glm::mat4 viewMat, glm::mat4 eyeMat, glm::vec3 camFront, glm::vec3 camPos, MachineLearning& machineLearning, glm::mat4 infProjMat);
-	void draw(glm::mat4 projMat, glm::mat4 viewMat, glm::mat4 eyeMat, RaymarchData& raymarchData, GLuint mengerProg, glm::mat4 infProjMat);
+	void update(glm::mat4 viewMat, glm::vec3 camPos, MachineLearning& machineLearning);
+	void draw(glm::mat4 projMat, glm::mat4 viewMat, glm::mat4 eyeMat, RaymarchData& raymarchData, GLuint mengerProg);
 	void exit();
 
 private:

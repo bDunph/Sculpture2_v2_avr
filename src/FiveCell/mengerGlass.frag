@@ -68,7 +68,8 @@ in vec4 nearPos;
 in vec4 farPos;
 in vec2 texCoordsOut;
 
-out vec4 fragColorOut; 
+layout(location = 0) out vec4 fragColorOut; 
+layout(location = 1) out float dataOut;
 
 //----------------------------------------------------------------------------------------
 // Ground plane SDF from https://www.iquilezles.org/www/articles/distfunctions/distfunctions.htm
@@ -104,7 +105,10 @@ float mandelbulbSDF(vec3 pos) {
     	    	//z = pow(r,Power)*vec3(sin(theta * sineControlVal)*cos(phi), sin(phi)*sin(theta), cos(theta)) + pos;
     	    	//z = pow(r,Power)*vec3(sin(theta)*cos(phi), sin(phi)*sin(theta), cos(theta)) + pos;
     	    }
-    	    return 0.5*log(r)*r/dr;
+
+    	float result = 0.5*log(r)*r/dr;
+	dataOut = result;
+	return result;;
 }
 //----------------------------------------------------------------------------------------
 
