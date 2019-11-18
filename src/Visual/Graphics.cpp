@@ -575,6 +575,13 @@ bool Graphics::BCreateFrameBuffer(FramebufferDesc& framebufferDesc)
 	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_R32F, m_nRenderWidth, m_nRenderHeight, true); 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D_MULTISAMPLE, framebufferDesc.m_gluiDataTextureID, 0);
 
+	//create a dynamically allocated 2D array to hold dataTexture values when they are read back to CPU
+	size_t rowSize = m_nRenderWidth, colSize = m_nRenderHeight;
+
+	auto dataArray2D = std::unique_ptr<m_fpDataArrayRow[]>(new m_fpDataArrayRow[rowSize]);
+	for(size_t i = 0; i < rowSize; ++i) 
+		dataArray2D[i] = m_fpDataArrayRow(new float[colSize]);
+ 
 	//check FBO status before setting up m_nResolveFramebufferId
 	auto status1 = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if (status1 != GL_FRAMEBUFFER_COMPLETE)
@@ -796,11 +803,14 @@ void Graphics::DevProcessInput(GLFWwindow *window){
 void Graphics::ReadDataTexture(){
 
 	//create a streaming buffer object
-	//using the buffer orphaning techniquei (or maybe not)
+	//using the buffer orphaning technique (or maybe not)
 	//each frame, dataTexture is filled with values from frag shader
 	//read this data from dataTexture
 	//write it to the streaming buffer object
 	//read the data back to the cpu asynchronously
+
+	//set up a pointer to array of texture data
+	
 	
 }
 

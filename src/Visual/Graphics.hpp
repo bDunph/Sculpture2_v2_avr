@@ -183,6 +183,9 @@ private:
 	
 	//rapidmix
 	FiveCell::MachineLearning machineLearning;
+
+	//pointer to pointer of 2D dynamic array for storing mandel values from openGL dataTexture
+	typedef std::unique_ptr<float[]> m_fpDataArrayRow;
 };
 
 
