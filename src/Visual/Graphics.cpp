@@ -791,6 +791,20 @@ void Graphics::DevProcessInput(GLFWwindow *window){
 }
 
 //-----------------------------------------------------------------------------
+// Read data back from data texture on the gpu
+//-----------------------------------------------------------------------------
+void Graphics::ReadDataTexture(){
+
+	//create a streaming buffer object
+	//using the buffer orphaning techniquei (or maybe not)
+	//each frame, dataTexture is filled with values from frag shader
+	//read this data from dataTexture
+	//write it to the streaming buffer object
+	//read the data back to the cpu asynchronously
+	
+}
+
+//-----------------------------------------------------------------------------
 // Update eye independent values before scene is rendered
 //-----------------------------------------------------------------------------
 void Graphics::UpdateSceneData(std::unique_ptr<VR_Manager>& vrm){

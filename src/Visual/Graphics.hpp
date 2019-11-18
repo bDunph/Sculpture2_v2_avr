@@ -30,6 +30,7 @@ public:
 	//void DevMouseCallback(GLFWwindow* window, double xpos, double ypos);
 	void GetControllerEvents(std::unique_ptr<VR_Manager>& vrm);
 	void DevProcessInput(GLFWwindow *window);
+	void ReadDataTexture();
 	void UpdateSceneData(std::unique_ptr<VR_Manager>& vrm);
 	bool BRenderFrame(std::unique_ptr<VR_Manager>& vrm);
 	void RenderControllerAxes(std::unique_ptr<VR_Manager>& vrm);
