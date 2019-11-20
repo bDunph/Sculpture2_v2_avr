@@ -24,6 +24,7 @@ public:
 	bool BCreateDefaultShaders();
 	GLuint BCreateSceneShaders(std::string shaderName);
 	GLuint CompileGLShader( const char *pchShaderName, const char *pchVertexShader, const char *pchFragmentShader );
+	bool BCreatePBO();
 	bool BSetupStereoRenderTargets(std::unique_ptr<VR_Manager>& vrm);
 	void CleanUpGL(std::unique_ptr<VR_Manager>& vrm);
 	bool BSetupCompanionWindow();
@@ -43,9 +44,7 @@ public:
 
 private:
 
-	glm::mat4 m_mat4CurrentViewMatrix;
-
-	glm::vec4 m_vFarPlaneDimensions;
+	bool CheckGLError(std::string location);
 
 	struct FramebufferDesc
 	{
@@ -60,6 +59,10 @@ private:
 	FramebufferDesc rightEyeDesc;
 
 	bool BCreateFrameBuffer(FramebufferDesc& framebufferDesc);
+
+	glm::mat4 m_mat4CurrentViewMatrix;
+
+	glm::vec4 m_vFarPlaneDimensions;
 
 	GLFWwindow* m_pGLContext; // TODO: convert this to unique_ptr<>	
 
@@ -186,6 +189,10 @@ private:
 
 	//pointer to pointer of 2D dynamic array for storing mandel values from openGL dataTexture
 	typedef std::unique_ptr<float[]> m_fpDataArrayRow;
+	std::unique_ptr<m_fpDataArrayRow[]> m_fpDataArrayCol;
+
+	// handle for PBO
+	GLuint pbo;
 };
 
 

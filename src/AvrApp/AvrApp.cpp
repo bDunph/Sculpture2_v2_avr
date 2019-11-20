@@ -54,20 +54,25 @@ AvrApp::AvrApp(int argc, char** argv) :
 }
 
 //--------------------------------------------
-bool AvrApp::BInitialise(){
+bool AvrApp::BInitialise()
+{
 
 	
-	if(!m_pExFlags->flagDevMode){
+	if(!m_pExFlags->flagDevMode)
+	{
 		//initialise OpenVR
 		m_pVR = std::make_unique<VR_Manager>(m_pExFlags);
 
-		if(!m_pVR->BInit()){
+		if(!m_pVR->BInit())
+		{
 			std::cout << "Error: OpenVR system not initialised!" << std::endl;
 			return false;
-		} else if(!m_pVR->BInitCompositor()){
+		} else if(!m_pVR->BInitCompositor())
+		{
 			std::cout << "Error: OpenVR compositor not initialised!" << std::endl;
 			return false;
-		} else if(!m_pVR->BSetupCameras()){ 
+		} else if(!m_pVR->BSetupCameras())
+		{ 
 			std::cout << "Error: Cameras not set up" << std::endl;
 			return false;
 		}
@@ -78,17 +83,25 @@ bool AvrApp::BInitialise(){
 	//initialise OpenGL
 	m_pGraphics = std::make_unique<Graphics>(m_pExFlags);
 
-	if(!m_pGraphics->BInitGL()){
+	if(!m_pGraphics->BInitGL())
+	{
 		std::cout << "Error: OpenGL context not initialised!" << std::endl;
 		return false;
-	} else if(!m_pGraphics->BSetupStereoRenderTargets(m_pVR)){
+	} else if(!m_pGraphics->BSetupStereoRenderTargets(m_pVR))
+	{
 			std::cout << "Error: Stereo render targets not set up" << std::endl;
 			return false;
-	}else if(!m_pGraphics->BCreateDefaultShaders()){
+	}else if(!m_pGraphics->BCreateDefaultShaders())
+	{
 		std::cout << "Error: Default shaders not set up" << std::endl;
 		return false;
-	}  else if(!m_pGraphics->BSetupCompanionWindow()){
+	}  else if(!m_pGraphics->BSetupCompanionWindow())
+	{
 		std::cout << "Error: Companion window not set up" << std::endl;
+		return false;
+	} else if(!m_pGraphics->BCreatePBO())
+	{
+		std::cout << "Error: PBO not created : AvrApp::BInitialise" << std::endl;
 		return false;
 	} 
 
@@ -110,7 +123,8 @@ bool AvrApp::BInitialise(){
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void AvrApp::RunMainLoop(){
+void AvrApp::RunMainLoop()
+{
 
 	bool bQuit = false;
 

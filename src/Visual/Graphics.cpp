@@ -79,10 +79,12 @@ Graphics::Graphics(std::unique_ptr<ExecutionFlags>& flagPtr) :
 //----------------------------------------------------------------------
 // Initialise OpenGL context, companion window, glew and vsync.
 // ---------------------------------------------------------------------	
-bool Graphics::BInitGL(bool fullscreen){
+bool Graphics::BInitGL(bool fullscreen)
+{
 	
 	//start gl context and O/S window using the glfw helper library
-	if(!glfwInit()){
+	if(!glfwInit())
+	{
 		std::cerr << "ERROR: could not start GLFW3\n";
 		return false;
 	}
@@ -93,17 +95,20 @@ bool Graphics::BInitGL(bool fullscreen){
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_SAMPLES, 4);
 	
-	if(m_bDebugOpenGL){
+	if(m_bDebugOpenGL && !m_bDevMode)
+	{
 		glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 		glDebugMessageCallback( (GLDEBUGPROC)DebugCallback, nullptr);
 		glDebugMessageControl( GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE );
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	}
 
-	if(!fullscreen){
+	if(!fullscreen)
+	{
 		windowWidth = m_nCompanionWindowWidth;
 		windowHeight = m_nCompanionWindowHeight;
-	} else {
+	} else 
+	{
 		GLFWmonitor* mon = glfwGetPrimaryMonitor();
 		const GLFWvidmode* vmode = glfwGetVideoMode(mon);
 
@@ -115,7 +120,8 @@ bool Graphics::BInitGL(bool fullscreen){
 
 	m_pGLContext = glfwCreateWindow(windowWidth, windowHeight, "AVR", NULL, NULL);	
 
-	if(!m_pGLContext){
+	if(!m_pGLContext)
+	{
 		std::cerr << "ERROR: could not open window with GLFW3\n";
 		glfwTerminate();
 		return false;
@@ -129,22 +135,23 @@ bool Graphics::BInitGL(bool fullscreen){
 	glewExperimental = GL_TRUE;
 	glewInit();
 
-	if(m_bVblank){
 #ifdef _WIN32
-	//turn on vsync on windows
-	//it uses the WGL_EXT_swap_control extension
-	typedef BOOL (WINAPI *PFNWGLSWAPINTERVALEXTPROC)(int interval);
-	PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT = NULL;
-	wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
-	if(!wglSwapIntervalEXT){
-		std::cout << "Warning: VSync not enabled" << std::endl;
-		m_bVblank = false;
+	if(m_bVblank)
+	{
+		//turn on vsync on windows
+		//it uses the WGL_EXT_swap_control extension
+		typedef BOOL (WINAPI *PFNWGLSWAPINTERVALEXTPROC)(int interval);
+		PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT = NULL;
+		wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
+		if(!wglSwapIntervalEXT)
+		{
+			std::cout << "Warning: VSync not enabled" << std::endl;
+			m_bVblank = false;
+		}
+		wglSwapIntervalEXT(1);
+		std::cout << "Graphics::BInitGL - VSync Enabled" << std::endl;
 	}
-	wglSwapIntervalEXT(1);
-	std::cout << "Graphics::BInitGL - VSync Enabled" << std::endl;
 #endif
-	}
-
 	const GLubyte* renderer = glGetString(GL_RENDERER); //get renderer string
 	const GLubyte* version = glGetString(GL_VERSION); //version as a string
 	std::cout << "Graphics: " << renderer << std::endl;
@@ -530,21 +537,72 @@ GLuint Graphics::CompileGLShader( const char *pchShaderName, const char *pchVert
 //-----------------------------------------------------------------------------
 bool Graphics::BSetupStereoRenderTargets(std::unique_ptr<VR_Manager>& vrm)
 {
-	if (!m_bDevMode && vrm != nullptr){
+	if (!m_bDevMode && vrm != nullptr)
+	{
 		vrm->m_pHMD->GetRecommendedRenderTargetSize( &m_nRenderWidth, &m_nRenderHeight );
-	} else if (!m_bDevMode && vrm == nullptr){
+	} else if (!m_bDevMode && vrm == nullptr)
+	{
 		return false;
 	}
 
 	bool fboL = BCreateFrameBuffer(leftEyeDesc);
 
-	if(!m_bDevMode){
+	if(!m_bDevMode)
+	{
 		bool fboR = BCreateFrameBuffer(rightEyeDesc);
 
 		if(!fboL || !fboR) return false;
 	}
 
 	if(!fboL) return false;
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Create a pixel buffer object to read back data from GPU to CPU
+//-----------------------------------------------------------------------------
+bool Graphics::BCreatePBO()
+{
+	glGenBuffers(1, &pbo);
+	if(m_bDebugOpenGL && m_bDevMode)
+	{
+		std::string errorLocation = "Graphics::BCreatePBO: Line 570";
+		if(CheckGLError(errorLocation)) return false;
+		//unsigned int error = 0;
+		//while(!(error = glGetError()))
+		//{
+		//	std::cout << "Error: PBO initialisation failed: Graphics::BCreatePBO" << std::endl;
+		//	std::cout << "*** OpenGL Error: " << error << " ***" << std::endl;
+		//	return false;
+		//}	
+	}
+
+	glBindBuffer(GL_PIXEL_PACK_BUFFER, pbo);
+	if(m_bDebugOpenGL && m_bDevMode)
+	{
+		std::string errorLocation = "Graphics::BCreatePBO: Line 584";
+		if(CheckGLError(errorLocation)) return false;
+		//GLenum error;
+		//while(!(error = glGetError()))
+		//{
+		//	std::cout << "Error: PBO initialisation failed1: Graphics::BCreatePBO" << std::endl;
+		//	std::cout << "*** OpenGL Error: " << error << " ***" << std::endl;
+		//	return false;
+		//}	
+	}
+
+	glBufferData(GL_PIXEL_PACK_BUFFER, m_nRenderWidth * m_nRenderHeight * sizeof(float), NULL, GL_STREAM_READ);			
+	if(m_bDebugOpenGL && m_bDevMode)
+	{
+		unsigned int error = 0;
+		while(!(error = glGetError()))
+		{
+			std::cout << "Error: PBO initialisation failed2: Graphics::BCreatePBO" << std::endl;
+			std::cout << "*** OpenGL Error: " << error << " ***" << std::endl;
+			return false;
+		}	
+	}	
 
 	return true;
 }
@@ -578,9 +636,9 @@ bool Graphics::BCreateFrameBuffer(FramebufferDesc& framebufferDesc)
 	//create a dynamically allocated 2D array to hold dataTexture values when they are read back to CPU
 	size_t rowSize = m_nRenderWidth, colSize = m_nRenderHeight;
 
-	auto dataArray2D = std::unique_ptr<m_fpDataArrayRow[]>(new m_fpDataArrayRow[rowSize]);
+	m_fpDataArrayCol = std::unique_ptr<m_fpDataArrayRow[]>(new m_fpDataArrayRow[rowSize]);
 	for(size_t i = 0; i < rowSize; ++i) 
-		dataArray2D[i] = m_fpDataArrayRow(new float[colSize]);
+		m_fpDataArrayCol[i] = m_fpDataArrayRow(new float[colSize]);
  
 	//check FBO status before setting up m_nResolveFramebufferId
 	auto status1 = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -1305,6 +1363,21 @@ void Graphics::CleanUpGL(std::unique_ptr<VR_Manager>& vrm){
 }
 
 //-------------------------------------------------
+// OpenGL error handling 
+//-------------------------------------------------
+bool Graphics::CheckGLError(std::string location)
+{
+	GLenum error;
+	while(!(error = glGetError()))
+	{
+		std::cout << "Error: " << location << std::endl;
+		std::cout << "*** OpenGL Error: " << error << " ***" << std::endl;
+		return true;
+	}	
+	return false;
+}
+
+//-------------------------------------------------
 // Temporary function to escape the main loop
 // ------------------------------------------------
 bool Graphics::TempEsc(){
@@ -1318,3 +1391,4 @@ bool Graphics::TempEsc(){
 
 	return false;
 }
+
