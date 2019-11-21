@@ -17,6 +17,7 @@
 #include "glfw3.h"
 #endif
 
+#include "SystemInfo.hpp"
 #include "ShaderManager.hpp"
 
 #define PI 3.14159265359
@@ -184,6 +185,7 @@ bool FiveCell::BSetupRaymarchQuad(GLuint shaderProg)
 	m_uiNumSceneTexCoords = _countof(groundRayTexCoords);	
 
 	glGenVertexArrays(1, &m_uiglSceneVAO);
+
 	glBindVertexArray(m_uiglSceneVAO);
 
 	GLuint m_uiglSceneVBO;

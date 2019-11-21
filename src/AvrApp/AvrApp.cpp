@@ -99,10 +99,6 @@ bool AvrApp::BInitialise()
 	{
 		std::cout << "Error: Companion window not set up" << std::endl;
 		return false;
-	} else if(!m_pGraphics->BCreatePBO())
-	{
-		std::cout << "Error: PBO not created : AvrApp::BInitialise" << std::endl;
-		return false;
 	} 
 
 	std::cout << "OpenGL initialised" << std::endl;

@@ -24,7 +24,7 @@ public:
 	bool BCreateDefaultShaders();
 	GLuint BCreateSceneShaders(std::string shaderName);
 	GLuint CompileGLShader( const char *pchShaderName, const char *pchVertexShader, const char *pchFragmentShader );
-	bool BCreatePBO();
+	void CreatePBO();
 	bool BSetupStereoRenderTargets(std::unique_ptr<VR_Manager>& vrm);
 	void CleanUpGL(std::unique_ptr<VR_Manager>& vrm);
 	bool BSetupCompanionWindow();

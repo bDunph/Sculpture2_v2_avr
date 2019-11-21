@@ -19,6 +19,7 @@
 
 #define PI 3.14159265
 
+
 //******** TERRIBLE GLOBAL VARIABLES HAVE TO FIX THIS WHEN I GET A CHANCE**********//
 bool m_bFirstMouse = true;
 double m_dLastX = 320.0f;
@@ -89,6 +90,8 @@ bool Graphics::BInitGL(bool fullscreen)
 		return false;
 	}
 
+	
+
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -134,6 +137,7 @@ bool Graphics::BInitGL(bool fullscreen)
 	//start GLEW extension handler
 	glewExperimental = GL_TRUE;
 	glewInit();
+	
 
 #ifdef _WIN32
 	if(m_bVblank)
@@ -163,32 +167,6 @@ bool Graphics::BInitGL(bool fullscreen)
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	// setup scene geometry
-	//skyboxShaderProg = BCreateSceneShaders("skybox");
-	//if(skyboxShaderProg == NULL){
-	//	std::cout << "skyboxShaderProg returned NULL: Graphics::BInitGL" << std::endl;
-	//	return false;
-	//}
-	//soundObjShaderProg = BCreateSceneShaders("soundObj");
-	//if(soundObjShaderProg == NULL){
-	//	std::cout << "soundObjShaderProg returned NULL: Graphics::BInitGL" << std::endl;
-	//	return false;
-	//}
-	//groundPlaneShaderProg = BCreateSceneShaders("groundPlane");
-	//if(groundPlaneShaderProg == NULL){
-	//	std::cout << "groundPlaneShaderProg returned NULL: Graphics::BInitGL" << std::endl;
-	//	return false;
-	//}
-	//fiveCellShaderProg = BCreateSceneShaders("rasterPolychoron");
-	//if(fiveCellShaderProg == NULL){
-	//	std::cout << "fiveCellShaderProg returned NULL: Graphics::BInitGL" << std::endl;
-	//	return false;
-	//}
-	//quadShaderProg = BCreateSceneShaders("quad");
-	//if(quadShaderProg == NULL){
-	//	std::cout << "quadShaderProg returned NULL: Graphics::BInitGL" << std::endl;
-	//	return false;
-	//}
 	mengerShaderProg = BCreateSceneShaders("mengerGlass");
 	if(mengerShaderProg == NULL){
 		std::cout << "mengerShaderProg returned NULL: Graphics::BInitGL" << std::endl;
@@ -221,102 +199,11 @@ bool Graphics::BInitGL(bool fullscreen)
 		m_nRenderHeight = m_nCompanionWindowHeight; 
 	}
 	
+	// Call glGetError() to clear glewInit() error bug
+	glGetError();
 
-//***********************************************************************************************
-// Quad to test texture rendering
-//***********************************************************************************************
-
-	//vertices
-	//float quadVerts [20] = {
-	//	//positions		//texCoords
-	//	-1.0f, 1.0f, 0.0f,	-1.0f, 1.0f,
-	//	-1.0f, -1.0f, 0.0f,	-1.0f, -1.0f,
-	//	1.0f, -1.0f, 0.0f,	1.0f, -1.0f,
-	//	1.0f, 1.0f, 0.0f,	1.0f, 1.0f
-	//};
-	
-	//float quadVerts [12] = {
-	//	//positions		
-	//	-1.0f, 1.0f, 0.0f,	
-	//	-1.0f, -1.0f, 0.0f,	
-	//	1.0f, -1.0f, 0.0f,	
-	//	1.0f, 1.0f, 0.0f	
-	//};
-
-	////indices
-	//unsigned int quadIndices [6] = {
-	//	0, 1, 2,
-	//	0, 2, 3
-	//};
-	//
-	////Set up ground plane buffers
-	//glGenVertexArrays(1, &quadVAO);
-	//glBindVertexArray(quadVAO);
-
-	//GLuint quadVBO;
-	////glGenBuffers(1, &quadVBO);
-	////glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-	////glBufferData(GL_ARRAY_BUFFER, 20 * sizeof(float), quadVerts, GL_STATIC_DRAW);
-
-	////glEnableVertexAttribArray(0);
-	////glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 12 * sizeof(float), (void*)(0));
-	////glEnableVertexAttribArray(1);
-	////glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	////glBindBuffer(GL_ARRAY_BUFFER, 0);
-	//
-	//glGenBuffers(1, &quadVBO);
-	//glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-	//glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(float), quadVerts, GL_STATIC_DRAW);
-
-	//glEnableVertexAttribArray(0);
-	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 12 * sizeof(float), (void*)(0));
-	//glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	////glGenTextures(1, &quadTexID);
-	////glBindTexture(GL_TEXTURE_2D, quadTexID);
-
-	////glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-	////glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-	////glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	////glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	////
-	//////load texture
-	////int texWidth;
-	////int texHeight;
-	////int texChnls;
-	////unsigned char* texData;
-        ////texData	= stbi_load("misty_ft.tga", &texWidth, &texHeight, &texChnls, 0);
-	////if(texData){
-	////	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texWidth, texHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, texData);
-	////	glGenerateMipmap(GL_TEXTURE_2D);
-	////} else {
-	////	std::cout << "Failed to load quad texture" << std::endl;
-	////}
-	////stbi_image_free(texData);
-
-	//glGenBuffers(1, &quadIndexBuffer);
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quadIndexBuffer);
-	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), quadIndices, GL_STATIC_DRAW);
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	//
-	////uniform setup
-	//quad_projMatLoc = glGetUniformLocation(quadShaderProg, "projMat");
-	//quad_viewMatLoc = glGetUniformLocation(quadShaderProg, "viewMat");
-	//quad_modelMatLoc = glGetUniformLocation(quadShaderProg, "quadModelMat");
-
-	////ground_lightPosLoc = glGetUniformLocation(quadShaderProg, "lightPos");
-	////ground_light2PosLoc = glGetUniformLocation(quadShaderProg, "light2Pos");
-
-	////ground_cameraPosLoc = glGetUniformLocation(quadShaderProg, "camPos");
-	//
-	//glBindVertexArray(0);
-
-	//glm::mat4 modelMatrix = glm::mat4(1.0f);
-	//glm::vec3 scaleQuad = glm::vec3(20.0f, 20.0f, 0.0f);
-	//glm::mat4 scaleQuadMatrix = glm::scale(modelMatrix, scaleQuad);
-
-	//quadModelMatrix = scaleQuadMatrix;
-
+	// Create Pixel buffer object to asynchronously read back from gpu
+	CreatePBO();
 
 	return true;
 }
@@ -562,49 +449,25 @@ bool Graphics::BSetupStereoRenderTargets(std::unique_ptr<VR_Manager>& vrm)
 //-----------------------------------------------------------------------------
 // Create a pixel buffer object to read back data from GPU to CPU
 //-----------------------------------------------------------------------------
-bool Graphics::BCreatePBO()
+void Graphics::CreatePBO()
 {
 	glGenBuffers(1, &pbo);
 	if(m_bDebugOpenGL && m_bDevMode)
 	{
-		std::string errorLocation = "Graphics::BCreatePBO: Line 570";
-		if(CheckGLError(errorLocation)) return false;
-		//unsigned int error = 0;
-		//while(!(error = glGetError()))
-		//{
-		//	std::cout << "Error: PBO initialisation failed: Graphics::BCreatePBO" << std::endl;
-		//	std::cout << "*** OpenGL Error: " << error << " ***" << std::endl;
-		//	return false;
-		//}	
+		GLCheckError();
 	}
 
 	glBindBuffer(GL_PIXEL_PACK_BUFFER, pbo);
 	if(m_bDebugOpenGL && m_bDevMode)
 	{
-		std::string errorLocation = "Graphics::BCreatePBO: Line 584";
-		if(CheckGLError(errorLocation)) return false;
-		//GLenum error;
-		//while(!(error = glGetError()))
-		//{
-		//	std::cout << "Error: PBO initialisation failed1: Graphics::BCreatePBO" << std::endl;
-		//	std::cout << "*** OpenGL Error: " << error << " ***" << std::endl;
-		//	return false;
-		//}	
+		GLCheckError();
 	}
 
 	glBufferData(GL_PIXEL_PACK_BUFFER, m_nRenderWidth * m_nRenderHeight * sizeof(float), NULL, GL_STREAM_READ);			
 	if(m_bDebugOpenGL && m_bDevMode)
 	{
-		unsigned int error = 0;
-		while(!(error = glGetError()))
-		{
-			std::cout << "Error: PBO initialisation failed2: Graphics::BCreatePBO" << std::endl;
-			std::cout << "*** OpenGL Error: " << error << " ***" << std::endl;
-			return false;
-		}	
-	}	
-
-	return true;
+		GLCheckError();
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1304,7 +1167,7 @@ void Graphics::CleanUpGL(std::unique_ptr<VR_Manager>& vrm){
 
 	if(m_pGLContext){
 
-		if( m_bDebugOpenGL )
+		if( m_bDebugOpenGL && !m_bDevMode)
 		{
 			glDebugMessageControl( GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_FALSE );
 			glDebugMessageCallback(nullptr, nullptr);
@@ -1360,21 +1223,6 @@ void Graphics::CleanUpGL(std::unique_ptr<VR_Manager>& vrm){
 
 		fiveCell.exit();
 	}
-}
-
-//-------------------------------------------------
-// OpenGL error handling 
-//-------------------------------------------------
-bool Graphics::CheckGLError(std::string location)
-{
-	GLenum error;
-	while(!(error = glGetError()))
-	{
-		std::cout << "Error: " << location << std::endl;
-		std::cout << "*** OpenGL Error: " << error << " ***" << std::endl;
-		return true;
-	}	
-	return false;
 }
 
 //-------------------------------------------------
