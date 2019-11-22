@@ -53,11 +53,15 @@ private:
 		GLuint m_nRenderFramebufferId;
 		GLuint m_nResolveTextureId;
 		GLuint m_nResolveFramebufferId;
-		GLuint m_gluiDataTextureID;
+		GLuint m_gluiDataTexture2DMulti;
 	};
 	FramebufferDesc leftEyeDesc;
 	FramebufferDesc rightEyeDesc;
 
+	GLuint m_gluiStorageFBO;
+	GLuint m_gluiDataTexture2D;
+
+	bool BCreateStorageFBO();
 	bool BCreateFrameBuffer(FramebufferDesc& framebufferDesc);
 
 	glm::mat4 m_mat4CurrentViewMatrix;
