@@ -859,6 +859,7 @@ bool Graphics::BRenderFrame(std::unique_ptr<VR_Manager>& vrm)
 		DevProcessInput(m_pGLContext);
 		RenderStereoTargets(vrm);
 		RenderCompanionWindow();
+		//ReadDataToPBO();
 		//**** ReadDataTexture()*******************
 		m_fLastFrame = currentFrame;
 	} else if(!m_bDevMode && vrm == nullptr){
@@ -1029,6 +1030,11 @@ void Graphics::RenderControllerAxes(std::unique_ptr<VR_Manager>& vrm)
 //-----------------------------------------------------------------------------
 void Graphics::ReadDataToPBO()
 {
+
+	// clear error flag
+	// TODO: find out why I have to keep calling glGetError()
+	glGetError();
+
 	// Bind PBO
 	//glBindBuffer(GL_PIXEL_PACK_BUFFER, pbo);
 	//if(m_bDebugOpenGL && m_bDevMode)
@@ -1036,17 +1042,32 @@ void Graphics::ReadDataToPBO()
 	//	GLCheckError();
 	//}
 
-	// Read color attachment 1 from m_nRenderFramebufferId and draw to PBO 
+	//glBindFramebuffer(GL_READ_FRAMEBUFFER, leftEyeDesc.m_nRenderFramebufferId);
+	//if(m_bDebugOpenGL && m_bDevMode)
+	//{
+	//	GLCheckError();
+	//}
+
+	//Read color attachment 1 from m_nRenderFramebufferId and draw to PBO 
 	glReadBuffer(GL_COLOR_ATTACHMENT1);
 	if(m_bDebugOpenGL && m_bDevMode)
 	{
 		GLCheckError();
 	}
-	//glReadPixels(0, 0, m_nRenderWidth, m_nRenderHeight, GL_RED, GL_FLOAT, 0);
-	//if(m_bDebugOpenGL && m_bDevMode)
-	//{
-	//	GLCheckError();
-	//}
+
+	glReadPixels(0, 0, m_nRenderWidth, m_nRenderHeight, GL_RED, GL_FLOAT, 0);
+	if(m_bDebugOpenGL && m_bDevMode)
+	{
+		GLCheckError();
+	}
+
+	// reset read buffer to color_attachment0 in order for visuals to appear on
+	// screen. Not sure why I need to do this. TODO: Find out why this is necessary
+	glReadBuffer(GL_COLOR_ATTACHMENT0);
+	if(m_bDebugOpenGL && m_bDevMode)
+	{
+		GLCheckError();
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1075,20 +1096,18 @@ void Graphics::RenderStereoTargets(std::unique_ptr<VR_Manager>& vrm)
 	glDrawBuffers(2, buffers);
  	glViewport(0, 0, m_nRenderWidth, m_nRenderHeight);
  	RenderScene(vr::Eye_Left, vrm);
-	
-	// read data from dataTexture to pbo before blit
-	ReadDataToPBO();
-
  	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	
-	glDisable(GL_MULTISAMPLE);
+	//glDisable(GL_MULTISAMPLE);
 	 	
  	glBindFramebuffer(GL_READ_FRAMEBUFFER, leftEyeDesc.m_nRenderFramebufferId);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, leftEyeDesc.m_nResolveFramebufferId);
 	
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, leftEyeDesc.m_nResolveFramebufferId);
 	
    	glBlitFramebuffer(0, 0, m_nRenderWidth, m_nRenderHeight, 0, 0, m_nRenderWidth, m_nRenderHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
+	ReadDataToPBO();
+	
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
