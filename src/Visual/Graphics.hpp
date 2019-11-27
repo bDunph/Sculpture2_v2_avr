@@ -31,7 +31,6 @@ public:
 	//void DevMouseCallback(GLFWwindow* window, double xpos, double ypos);
 	void GetControllerEvents(std::unique_ptr<VR_Manager>& vrm);
 	void DevProcessInput(GLFWwindow *window);
-	void ReadDataTexture();
 	void UpdateSceneData(std::unique_ptr<VR_Manager>& vrm);
 	bool BRenderFrame(std::unique_ptr<VR_Manager>& vrm);
 	void RenderControllerAxes(std::unique_ptr<VR_Manager>& vrm);
@@ -45,6 +44,7 @@ public:
 private:
 
 	void WriteDataToPBO();
+	void TransferDataToCPU();
 	bool CheckGLError(std::string location);
 
 	struct FramebufferDesc
@@ -194,11 +194,14 @@ private:
 	FiveCell::MachineLearning machineLearning;
 
 	//pointer to pointer of 2D dynamic array for storing mandel values from openGL dataTexture
-	typedef std::unique_ptr<float[]> m_fpDataArrayRow;
-	std::unique_ptr<m_fpDataArrayRow[]> m_fpDataArrayCol;
+	//typedef std::unique_ptr<float[]> m_fpDataArrayRow;
+	//std::unique_ptr<m_fpDataArrayRow[]> m_fpDataArrayCol;
 
 	// handle for PBO
 	GLuint pbo;
+
+	// vector to store floats from pbo
+	std::vector<float> shaderData;
 };
 
 

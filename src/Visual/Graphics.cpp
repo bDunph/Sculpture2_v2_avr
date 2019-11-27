@@ -558,11 +558,11 @@ bool Graphics::BCreateFrameBuffer(FramebufferDesc& framebufferDesc)
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D_MULTISAMPLE, framebufferDesc.m_gluiDataTexture2DMulti, 0);
 
 	//create a dynamically allocated 2D array to hold dataTexture values when they are read back to CPU
-	size_t rowSize = m_nRenderWidth, colSize = m_nRenderHeight;
+	//size_t rowSize = m_nRenderWidth, colSize = m_nRenderHeight;
 
-	m_fpDataArrayCol = std::unique_ptr<m_fpDataArrayRow[]>(new m_fpDataArrayRow[rowSize]);
-	for(size_t i = 0; i < rowSize; ++i) 
-		m_fpDataArrayCol[i] = m_fpDataArrayRow(new float[colSize]);
+	//m_fpDataArrayCol = std::unique_ptr<m_fpDataArrayRow[]>(new m_fpDataArrayRow[rowSize]);
+	//for(size_t i = 0; i < rowSize; ++i) 
+	//	m_fpDataArrayCol[i] = m_fpDataArrayRow(new float[colSize]);
  
 	//check FBO status before setting up m_nResolveFramebufferId
 	auto status1 = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -782,28 +782,20 @@ void Graphics::DevProcessInput(GLFWwindow *window){
 //-----------------------------------------------------------------------------
 // Read data back from data texture on the gpu
 //-----------------------------------------------------------------------------
-//void Graphics::ReadDataTexture(){
+void Graphics::TransferDataToCPU()
+{
+	void* pboData = glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
+	
+	if(pboData == NULL) std::cout << "ERROR: PBO returned null: Graphics::TransferDataToCPU() " << std::endl;
 
-	//create a streaming buffer object
-	//using the buffer orphaning technique (or maybe not)
-	//each frame, dataTexture is filled with values from frag shader
-	//read this data from dataTexture
-	//write it to the streaming buffer object
-	//read the data back to the cpu asynchronously
+	for(int i = 0; i < m_nRenderWidth * m_nRenderHeight; ++i)
+	{
+		shaderData.push_back(*((unsigned char*)pboData + i));
+	}
 
-	//set up a pointer to array of texture data
-	
-	// copy texture data to pbo
-	//glBindBuffer(GL_PIXEL_PACK_BUFFER, pbo);
-	//if(m_bDebugOpenGL && m_bDevMode)
-	//{
-	//	GLCheckError();
-	//}
-
-	
-	
-	
-//}
+	if(glUnmapBuffer(GL_PIXEL_PACK_BUFFER) != GL_TRUE)
+		std::cout << "ERROR: PBO failed to unmap: Graphics::TransferDataToCPU()" << std::endl;
+}
 
 //-----------------------------------------------------------------------------
 // Update eye independent values before scene is rendered
@@ -905,7 +897,7 @@ bool Graphics::BRenderFrame(std::unique_ptr<VR_Manager>& vrm)
 		RenderCompanionWindow();
 		BlitDataTexture();
 		WriteDataToPBO();
-		//**** ReadDataTexture()*******************
+		TransferDataToCPU();	
 		m_fLastFrame = currentFrame;
 	} else if(!m_bDevMode && vrm == nullptr){
 		std::cout << "ERROR: vrm not assigned : RenderFrame()" << std::endl;
