@@ -203,7 +203,7 @@ bool Graphics::BInitGL(bool fullscreen)
 	glGetError();
 
 	// Create temporary FBO to hold 2D data texture
-	//if(!BCreateStorageFBO()) return false;
+	if(!BCreateStorageFBO()) return false;
 	
 	// Create Pixel buffer object to asynchronously read back from gpu
 	CreatePBO();
@@ -472,11 +472,11 @@ void Graphics::CreatePBO()
 		GLCheckError();
 	}
 
-	//glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-	//if(m_bDebugOpenGL && m_bDevMode)
-	//{
-	//	GLCheckError();
-	//}
+	glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+	if(m_bDebugOpenGL && m_bDevMode)
+	{
+		GLCheckError();
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -484,51 +484,51 @@ void Graphics::CreatePBO()
 // gluiDataTexture2DMulti (GL_TEXTURE_2D_MULTISAMPLE) to gluiDataTexture2D 
 // (GL_TEXTURE_2D)
 //-----------------------------------------------------------------------------
-//bool Graphics::BCreateStorageFBO()
-//{
-//	glGenFramebuffers(1, &m_gluiStorageFBO);
-//	glBindFramebuffer(GL_FRAMEBUFFER, m_gluiStorageFBO);
-//
-//	glGenTextures(1, &m_gluiDataTexture2D);		
-//	glBindTexture(GL_TEXTURE_2D, m_gluiDataTexture2D);
-//	glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, m_nRenderWidth, m_nRenderHeight, 0, GL_RED, GL_FLOAT, 0);
-//
-//	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gluiDataTexture2D, 0);
-//
-// 	//check FBO status before setting up m_nResolveFramebufferId
-//	//TODO: put this status test in its own function in systemInfo.cpp
-//	//TODO: put this status test in its own function in systemInfo.cpp
-//	auto status1 = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-//	if (status1 != GL_FRAMEBUFFER_COMPLETE)
-//	{
-//		std::cout << "Error: m_gluiStorageFBO not created : " << std::to_string(status1) << " -- Graphics::BCreateStorageFBO" << std::endl;
-//
-//		if(status1 == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT){
-//			std::cout << "ERROR: Incomplete Attachment" << std::endl;
-//		} else if(status1 == GL_FRAMEBUFFER_UNDEFINED){
-//			std::cout << "ERROR: Undefined" << std::endl;
-//		} else if(status1 == GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT){
-//			std::cout << "ERROR: Incomplete Missing Attachment" << std::endl;
-//		} else if(status1 == GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER){
-//			std::cout << "ERROR: Incomplete Draw Buffer" << std::endl;
-//		} else if(status1 == GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER){
-//			std::cout << "ERROR: Incomplete Read Buffer" << std::endl;
-//		} else if(status1 == GL_FRAMEBUFFER_UNSUPPORTED){
-//			std::cout << "ERROR: Unsupported" << std::endl;
-//		} else if(status1 == GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE){
-//			std::cout << "ERROR: Incomplete Multisample" << std::endl;
-//		} else if(status1 == GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS){
-//			std::cout << "ERROR: Incomplete Layer Targets" << std::endl;
-//		}
-//
-//		return false;
-//	}
-//
-//	glBindTexture(GL_TEXTURE_2D, 0);
-//	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-//
-//	return true;
-//}
+bool Graphics::BCreateStorageFBO()
+{
+	glGenFramebuffers(1, &m_gluiStorageFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_gluiStorageFBO);
+
+	glGenTextures(1, &m_gluiDataTexture2D);		
+	glBindTexture(GL_TEXTURE_2D, m_gluiDataTexture2D);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, m_nRenderWidth, m_nRenderHeight, 0, GL_RED, GL_FLOAT, 0);
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gluiDataTexture2D, 0);
+
+ 	//check FBO status before setting up m_nResolveFramebufferId
+	//TODO: put this status test in its own function in systemInfo.cpp
+	//TODO: put this status test in its own function in systemInfo.cpp
+	auto status1 = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (status1 != GL_FRAMEBUFFER_COMPLETE)
+	{
+		std::cout << "Error: m_gluiStorageFBO not created : " << std::to_string(status1) << " -- Graphics::BCreateStorageFBO" << std::endl;
+
+		if(status1 == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT){
+			std::cout << "ERROR: Incomplete Attachment" << std::endl;
+		} else if(status1 == GL_FRAMEBUFFER_UNDEFINED){
+			std::cout << "ERROR: Undefined" << std::endl;
+		} else if(status1 == GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT){
+			std::cout << "ERROR: Incomplete Missing Attachment" << std::endl;
+		} else if(status1 == GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER){
+			std::cout << "ERROR: Incomplete Draw Buffer" << std::endl;
+		} else if(status1 == GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER){
+			std::cout << "ERROR: Incomplete Read Buffer" << std::endl;
+		} else if(status1 == GL_FRAMEBUFFER_UNSUPPORTED){
+			std::cout << "ERROR: Unsupported" << std::endl;
+		} else if(status1 == GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE){
+			std::cout << "ERROR: Incomplete Multisample" << std::endl;
+		} else if(status1 == GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS){
+			std::cout << "ERROR: Incomplete Layer Targets" << std::endl;
+		}
+
+		return false;
+	}
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	return true;
+}
 
 //-----------------------------------------------------------------------------
 // Creates two frame buffers. One with a depth and colour attachments. Another with just a   
@@ -538,17 +538,11 @@ void Graphics::CreatePBO()
 bool Graphics::BCreateFrameBuffer(FramebufferDesc& framebufferDesc)
 {
 	glGenFramebuffers(1, &framebufferDesc.m_nRenderFramebufferId );
-	if(m_bDebugOpenGL && m_bDevMode)
-	{
-		GLCheckError();
-	}
 	glBindFramebuffer(GL_FRAMEBUFFER, framebufferDesc.m_nRenderFramebufferId);
-	if(m_bDebugOpenGL && m_bDevMode)
-	{
-		GLCheckError();
-	}
+
 	glGenRenderbuffers(1, &framebufferDesc.m_nDepthBufferId);
 	glBindRenderbuffer(GL_RENDERBUFFER, framebufferDesc.m_nDepthBufferId);
+
 	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH_COMPONENT, m_nRenderWidth, m_nRenderHeight );
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER,	framebufferDesc.m_nDepthBufferId );
 
@@ -832,6 +826,56 @@ void Graphics::UpdateSceneData(std::unique_ptr<VR_Manager>& vrm){
 }
 
 //-----------------------------------------------------------------------------
+// Convert the data texture from multisample to non-multisample so
+// glGetTexImage can be used to write contents to PBO
+//-----------------------------------------------------------------------------
+void Graphics::BlitDataTexture()
+{
+
+	// clear error flag
+	glGetError();
+
+	glDisable(GL_MULTISAMPLE);
+	if(m_bDebugOpenGL && m_bDevMode)
+	{
+		GLCheckError();
+	}
+
+ 	glBindFramebuffer(GL_READ_FRAMEBUFFER, leftEyeDesc.m_nRenderFramebufferId);
+	if(m_bDebugOpenGL && m_bDevMode)
+	{
+		GLCheckError();
+	}
+	glReadBuffer(GL_COLOR_ATTACHMENT1);
+	if(m_bDebugOpenGL && m_bDevMode)
+	{
+		GLCheckError();
+	}
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_gluiStorageFBO);
+	if(m_bDebugOpenGL && m_bDevMode)
+	{
+		GLCheckError();
+	}
+   	glBlitFramebuffer(0, 0, m_nRenderWidth, m_nRenderHeight, 0, 0, m_nRenderWidth, m_nRenderHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+	if(m_bDebugOpenGL && m_bDevMode)
+	{
+		GLCheckError();
+	}
+
+	// reset read buffer to color_attachment0 in order for visuals to appear on
+	// screen. Not sure why I need to do this. TODO: Find out why this is necessary
+	glReadBuffer(GL_COLOR_ATTACHMENT0);
+	if(m_bDebugOpenGL && m_bDevMode)
+	{
+		GLCheckError();
+	}
+
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+}
+
+//-----------------------------------------------------------------------------
 // Main function that renders textures to hmd.
 //-----------------------------------------------------------------------------
 bool Graphics::BRenderFrame(std::unique_ptr<VR_Manager>& vrm)
@@ -859,7 +903,8 @@ bool Graphics::BRenderFrame(std::unique_ptr<VR_Manager>& vrm)
 		DevProcessInput(m_pGLContext);
 		RenderStereoTargets(vrm);
 		RenderCompanionWindow();
-		//ReadDataToPBO();
+		BlitDataTexture();
+		WriteDataToPBO();
 		//**** ReadDataTexture()*******************
 		m_fLastFrame = currentFrame;
 	} else if(!m_bDevMode && vrm == nullptr){
@@ -1028,7 +1073,7 @@ void Graphics::RenderControllerAxes(std::unique_ptr<VR_Manager>& vrm)
 //-----------------------------------------------------------------------------
 // Read data from currently bound read framebuffer to pbo
 //-----------------------------------------------------------------------------
-void Graphics::ReadDataToPBO()
+void Graphics::WriteDataToPBO()
 {
 
 	// clear error flag
@@ -1036,34 +1081,19 @@ void Graphics::ReadDataToPBO()
 	glGetError();
 
 	// Bind PBO
-	//glBindBuffer(GL_PIXEL_PACK_BUFFER, pbo);
-	//if(m_bDebugOpenGL && m_bDevMode)
-	//{
-	//	GLCheckError();
-	//}
-
-	//glBindFramebuffer(GL_READ_FRAMEBUFFER, leftEyeDesc.m_nRenderFramebufferId);
-	//if(m_bDebugOpenGL && m_bDevMode)
-	//{
-	//	GLCheckError();
-	//}
-
-	//Read color attachment 1 from m_nRenderFramebufferId and draw to PBO 
-	glReadBuffer(GL_COLOR_ATTACHMENT1);
+	glBindBuffer(GL_PIXEL_PACK_BUFFER, pbo);
 	if(m_bDebugOpenGL && m_bDevMode)
 	{
 		GLCheckError();
 	}
 
-	glReadPixels(0, 0, m_nRenderWidth, m_nRenderHeight, GL_RED, GL_FLOAT, 0);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_gluiStorageFBO);
 	if(m_bDebugOpenGL && m_bDevMode)
 	{
 		GLCheckError();
 	}
 
-	// reset read buffer to color_attachment0 in order for visuals to appear on
-	// screen. Not sure why I need to do this. TODO: Find out why this is necessary
-	glReadBuffer(GL_COLOR_ATTACHMENT0);
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, 0);	
 	if(m_bDebugOpenGL && m_bDevMode)
 	{
 		GLCheckError();
@@ -1098,16 +1128,13 @@ void Graphics::RenderStereoTargets(std::unique_ptr<VR_Manager>& vrm)
  	RenderScene(vr::Eye_Left, vrm);
  	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	
-	//glDisable(GL_MULTISAMPLE);
+	glDisable(GL_MULTISAMPLE);
 	 	
  	glBindFramebuffer(GL_READ_FRAMEBUFFER, leftEyeDesc.m_nRenderFramebufferId);
-	
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, leftEyeDesc.m_nResolveFramebufferId);
 	
    	glBlitFramebuffer(0, 0, m_nRenderWidth, m_nRenderHeight, 0, 0, m_nRenderWidth, m_nRenderHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
-	ReadDataToPBO();
-	
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
@@ -1253,10 +1280,11 @@ void Graphics::RenderCompanionWindow()
 	//glDrawElements(GL_TRIANGLES, m_uiCompanionWindowIndexSize/2, GL_UNSIGNED_SHORT, (const void *)(uintptr_t)(m_uiCompanionWindowIndexSize));
 
 	// Read pixels to memory to save as png **to do - change to C++14 style**
-	if(m_bRecordScreen){
+	if(m_bRecordScreen)
+	{
 		GLubyte *pixels = (GLubyte*) malloc(4 * m_nCompanionWindowWidth * m_nCompanionWindowHeight);
-
-		if(pixels){
+		if(pixels)
+		{
 			glReadPixels(0, 0, m_nCompanionWindowWidth, m_nCompanionWindowHeight, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 		}
 	

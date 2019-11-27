@@ -44,7 +44,7 @@ public:
 
 private:
 
-	void ReadDataToPBO();
+	void WriteDataToPBO();
 	bool CheckGLError(std::string location);
 
 	struct FramebufferDesc
@@ -62,8 +62,9 @@ private:
 	GLuint m_gluiStorageFBO;
 	GLuint m_gluiDataTexture2D;
 
-	//bool BCreateStorageFBO();
+	bool BCreateStorageFBO();
 	bool BCreateFrameBuffer(FramebufferDesc& framebufferDesc);
+	void BlitDataTexture();
 
 	glm::mat4 m_mat4CurrentViewMatrix;
 
