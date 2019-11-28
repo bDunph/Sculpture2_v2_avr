@@ -6,6 +6,7 @@
 
 #include <cmath>
 #include <stdlib.h>
+#include <cstdlib>
 
 #include "lodepng.h"
 #include "Graphics.hpp"
@@ -784,8 +785,18 @@ void Graphics::DevProcessInput(GLFWwindow *window){
 //-----------------------------------------------------------------------------
 void Graphics::TransferDataToCPU()
 {
+
+	std::unique_ptr<float[]> dataSize = make_unique<float[]>(m_nRenderWidth * m_nRenderHeight);
+	std::unique_ptr<float> cpuData = make_unique<float>();
+
 	void* pboData = glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
 	
+	******This is not working herererererererer**********	
+	// copy memory block from pixel buffer object to memory block on cpu
+	memcpy(&cpuData, pboData, sizeof(dataSize));
+
+	//std::cout << "PBO : " << *cpuData << std::endl;
+
 	if(pboData == NULL) std::cout << "ERROR: PBO returned null: Graphics::TransferDataToCPU() " << std::endl;
 
 	for(int i = 0; i < m_nRenderWidth * m_nRenderHeight; ++i)
@@ -815,6 +826,24 @@ void Graphics::UpdateSceneData(std::unique_ptr<VR_Manager>& vrm){
 
 	//update variables for fiveCell
 	fiveCell.update(m_mat4CurrentViewMatrix, cameraPosition, machineLearning);
+
+	//std::cout << shaderData.size() << std::endl;
+	// write shaderData to file each frame to see output
+	//std::ofstream dataFile;
+	//double timeStamp = glfwGetTime();
+	//std::string fileName = "dataFile" + std::to_string(timeStamp) + ".txt";
+	//dataFile.open(fileName);
+	//for(int i = 0; i < shaderData.size(); i++)
+	//{
+	//	dataFile << i << " -- " << shaderData[i] << "\n";
+	//}
+	//dataFile.close();
+
+	//for(int i = 0; i < shaderData.size(); i++)
+	//{
+	//	std::cout << shaderData[i] << std::endl;
+	//}
+	//shaderData.clear();
 }
 
 //-----------------------------------------------------------------------------

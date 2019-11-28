@@ -107,7 +107,6 @@ float mandelbulbSDF(vec3 pos) {
     	    }
 
     	float result = 0.5*log(r)*r/dr;
-	dataOut = result;
 	return result;;
 }
 //----------------------------------------------------------------------------------------
@@ -115,7 +114,8 @@ float mandelbulbSDF(vec3 pos) {
 //----------------------------------------------------------------------------------------
 // Distance function for the whole scene
 //----------------------------------------------------------------------------------------
-float sceneSDF(vec3 pos){
+float sceneSDF(vec3 pos)
+{
 
 	mandelDist = mandelbulbSDF(pos + vec3(0.0, -1.8, 0.0));
 
@@ -145,23 +145,29 @@ float sceneSDF(vec3 pos){
 // * start: the starting distance away from the eye
 // * end: the max distance away from the ey to march before giving up
 //----------------------------------------------------------------------------------------
-vec2 shortestDistanceToSurface(vec3 eye, vec3 marchingDirection, float start, float end) {
+vec2 shortestDistanceToSurface(vec3 eye, vec3 marchingDirection, float start, float end) 
+{
 
 	float objID = 0.0;
     	float depth = start;
 
-    	for (int i = 0; i < MAX_MARCHING_STEPS; i++) {
+    	for (int i = 0; i < MAX_MARCHING_STEPS; i++) 
+	{
 
 		vec3 pointPos = eye + depth * marchingDirection;
 			
 		float dist = sceneSDF(pointPos);
 
 		
-        	if (dist < EPSILON) {
+        	if (dist < EPSILON) 
+		{
 			
-			if(dist == mandelDist) {
+			if(dist == mandelDist) 
+			{
 				objID = MANDEL_ID;
-			} else if(dist == planeDist){
+			} 
+			else if(dist == planeDist)
+			{
 				objID = PLANE_ID;
 			}
 
@@ -170,7 +176,8 @@ vec2 shortestDistanceToSurface(vec3 eye, vec3 marchingDirection, float start, fl
 
         	depth += dist;
 
-        	if (depth >= end) {
+        	if (depth >= end) 
+		{
         	    return vec2(end, NO_OBJECT);
         	}
 
@@ -178,6 +185,7 @@ vec2 shortestDistanceToSurface(vec3 eye, vec3 marchingDirection, float start, fl
 
     	return vec2(end, NO_OBJECT);
 }
+
 //----------------------------------------------------------------------------------------
 // Fog based on https://www.iquilezles.org/www/articles/fog/fog.htm
 //----------------------------------------------------------------------------------------
@@ -590,7 +598,10 @@ void main()
 
 	// Get distance to nearest surface and object ID
     	vec2 dist = shortestDistanceToSurface(rayOrigin, rayDir, MIN_DIST, MAX_DIST);
-    
+
+	// send object id for fragment to application 
+   	dataOut = dist.y; 
+
     	// The closest point on the surface to the eyepoint along the view ray
     	vec3 p = rayOrigin + dist.x * rayDir;
 
