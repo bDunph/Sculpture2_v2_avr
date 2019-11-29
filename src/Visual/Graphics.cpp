@@ -786,23 +786,26 @@ void Graphics::DevProcessInput(GLFWwindow *window){
 void Graphics::TransferDataToCPU()
 {
 
-	std::unique_ptr<float[]> dataSize = make_unique<float[]>(m_nRenderWidth * m_nRenderHeight);
-	std::unique_ptr<float> cpuData = make_unique<float>();
+	auto dataSize = make_unique<float[]>(m_nRenderWidth * m_nRenderHeight);
+	//auto cpuData = make_unique<float>();
+	//cpuData = &dataSize;
 
+	// 'orphan' buffer before calling glMapBuffer to avoid waiting for gpu
+	//glBufferData(GL_PIXEL_PACK_BUFFER, m_nRenderWidth * m_nRenderHeight * sizeof(float), NULL, GL_STREAM_READ);			
 	void* pboData = glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
 	
-	******This is not working herererererererer**********	
 	// copy memory block from pixel buffer object to memory block on cpu
-	memcpy(&cpuData, pboData, sizeof(dataSize));
+	//memcpy(&dataSize, pboData, sizeof(m_nRenderWidth * m_nRenderHeight * sizeof(float)));
 
-	//std::cout << "PBO : " << *cpuData << std::endl;
+	//int size = (m_nRenderHeight * m_nRenderWidth) * 0.5f;
+	std::cout << "PBO : " << *((int*)pboData) << std::endl;
 
-	if(pboData == NULL) std::cout << "ERROR: PBO returned null: Graphics::TransferDataToCPU() " << std::endl;
+	//if(pboData == NULL) std::cout << "ERROR: PBO returned null: Graphics::TransferDataToCPU() " << std::endl;
 
-	for(int i = 0; i < m_nRenderWidth * m_nRenderHeight; ++i)
-	{
-		shaderData.push_back(*((unsigned char*)pboData + i));
-	}
+	//for(int i = 0; i < m_nRenderWidth * m_nRenderHeight; ++i)
+	//{
+	//	shaderData.push_back(*((unsigned char*)pboData + i));
+	//}
 
 	if(glUnmapBuffer(GL_PIXEL_PACK_BUFFER) != GL_TRUE)
 		std::cout << "ERROR: PBO failed to unmap: Graphics::TransferDataToCPU()" << std::endl;
