@@ -798,7 +798,7 @@ void Graphics::TransferDataToCPU()
 	//memcpy(&dataSize, pboData, sizeof(m_nRenderWidth * m_nRenderHeight * sizeof(float)));
 
 	//int size = (m_nRenderHeight * m_nRenderWidth) * 0.5f;
-	std::cout << "PBO : " << *((int*)pboData) << std::endl;
+	//std::cout << "PBO : " << *((int*)pboData) << std::endl;
 
 	//if(pboData == NULL) std::cout << "ERROR: PBO returned null: Graphics::TransferDataToCPU() " << std::endl;
 
