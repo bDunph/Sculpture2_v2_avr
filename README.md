@@ -34,3 +34,6 @@ than the Menger Cube.
 If not connected to a Vive Pro headset the application can be 
 run in dev mode by including the -dev flag when running the 
 avr binary.
+
+This piece will also incorporate audio and visual mapping using a neural
+network that is provided by RapidLib.
