@@ -600,7 +600,7 @@ void main()
     	vec2 dist = shortestDistanceToSurface(rayOrigin, rayDir, MIN_DIST, MAX_DIST);
 
 	// send object id for fragment to application 
-   	dataOut = dist.y; 
+   	dataOut = 2.0; 
 
     	// The closest point on the surface to the eyepoint along the view ray
     	vec3 p = rayOrigin + dist.x * rayDir;

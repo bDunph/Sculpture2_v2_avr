@@ -53,7 +53,9 @@ Graphics::Graphics(std::unique_ptr<ExecutionFlags>& flagPtr) :
 	m_bDebugOpenGL(false),
 	m_unImageCount(0),
 	m_fDeltaTime(0.0),
-	m_fLastFrame(0.0)
+	m_fLastFrame(0.0),
+	m_bPBOFull(false),
+	m_bWriteInProgress(false)
 	//m_uiFrameNumber(0)
 {
 	m_bDebugOpenGL = flagPtr->flagDebugOpenGL;
@@ -65,7 +67,7 @@ Graphics::Graphics(std::unique_ptr<ExecutionFlags>& flagPtr) :
 	m_pRotationVal = std::make_unique<int>();
 	*m_pRotationVal = 0;
 
-	m_bRecordScreen = true;
+	m_bRecordScreen = false;
 
 	//m_tStartTime = time(0);
 
@@ -467,7 +469,7 @@ void Graphics::CreatePBO()
 		GLCheckError();
 	}
 
-	glBufferData(GL_PIXEL_PACK_BUFFER, m_nRenderWidth * m_nRenderHeight * sizeof(float), NULL, GL_STREAM_READ);			
+	glBufferData(GL_PIXEL_PACK_BUFFER, m_nRenderWidth * m_nRenderHeight * sizeof(float), NULL, GL_STREAM_READ);	
 	if(m_bDebugOpenGL && m_bDevMode)
 	{
 		GLCheckError();
@@ -495,6 +497,9 @@ bool Graphics::BCreateStorageFBO()
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, m_nRenderWidth, m_nRenderHeight, 0, GL_RED, GL_FLOAT, 0);
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gluiDataTexture2D, 0);
+
+	buf[0] = GL_COLOR_ATTACHMENT0;
+	glDrawBuffers(1, buf);
 
  	//check FBO status before setting up m_nResolveFramebufferId
 	//TODO: put this status test in its own function in systemInfo.cpp
@@ -557,6 +562,11 @@ bool Graphics::BCreateFrameBuffer(FramebufferDesc& framebufferDesc)
 	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, framebufferDesc.m_gluiDataTexture2DMulti);
 	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_R32F, m_nRenderWidth, m_nRenderHeight, true); 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D_MULTISAMPLE, framebufferDesc.m_gluiDataTexture2DMulti, 0);
+
+	// set up the two textures as draw buffers
+	buffers[0] = GL_COLOR_ATTACHMENT0;
+	buffers[1] = GL_COLOR_ATTACHMENT1;
+	glDrawBuffers(2, buffers);
 
 	//create a dynamically allocated 2D array to hold dataTexture values when they are read back to CPU
 	//size_t rowSize = m_nRenderWidth, colSize = m_nRenderHeight;
@@ -785,20 +795,26 @@ void Graphics::DevProcessInput(GLFWwindow *window){
 //-----------------------------------------------------------------------------
 void Graphics::TransferDataToCPU()
 {
+	// Bind PBO
+	glBindBuffer(GL_PIXEL_PACK_BUFFER, pbo);
+	if(m_bDebugOpenGL && m_bDevMode)
+	{
+		GLCheckError();
+	}
 
-	auto dataSize = make_unique<float[]>(m_nRenderWidth * m_nRenderHeight);
+	//auto dataSize = make_unique<float[]>(m_nRenderWidth * m_nRenderHeight);
 	//auto cpuData = make_unique<float>();
 	//cpuData = &dataSize;
 
 	// 'orphan' buffer before calling glMapBuffer to avoid waiting for gpu
 	//glBufferData(GL_PIXEL_PACK_BUFFER, m_nRenderWidth * m_nRenderHeight * sizeof(float), NULL, GL_STREAM_READ);			
-	void* pboData = glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
+	float* pboData = (float*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
 	
 	// copy memory block from pixel buffer object to memory block on cpu
 	//memcpy(&dataSize, pboData, sizeof(m_nRenderWidth * m_nRenderHeight * sizeof(float)));
 
 	//int size = (m_nRenderHeight * m_nRenderWidth) * 0.5f;
-	//std::cout << "PBO : " << *((int*)pboData) << std::endl;
+	std::cout << "PBO : " << *pboData << std::endl;
 
 	//if(pboData == NULL) std::cout << "ERROR: PBO returned null: Graphics::TransferDataToCPU() " << std::endl;
 
@@ -809,6 +825,9 @@ void Graphics::TransferDataToCPU()
 
 	if(glUnmapBuffer(GL_PIXEL_PACK_BUFFER) != GL_TRUE)
 		std::cout << "ERROR: PBO failed to unmap: Graphics::TransferDataToCPU()" << std::endl;
+
+	m_bPBOFull = false;
+	glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 }
 
 //-----------------------------------------------------------------------------
@@ -826,6 +845,8 @@ void Graphics::UpdateSceneData(std::unique_ptr<VR_Manager>& vrm){
 		m_mat4CurrentViewMatrix = m_matDevViewMatrix;
 		cameraPosition = m_vec3DevCamPos;
 	}
+
+	if(m_bPBOFull) TransferDataToCPU();	
 
 	//update variables for fiveCell
 	fiveCell.update(m_mat4CurrentViewMatrix, cameraPosition, machineLearning);
@@ -859,7 +880,7 @@ void Graphics::BlitDataTexture()
 	// clear error flag
 	glGetError();
 
-	glDisable(GL_MULTISAMPLE);
+	//glDisable(GL_MULTISAMPLE);
 	if(m_bDebugOpenGL && m_bDevMode)
 	{
 		GLCheckError();
@@ -880,15 +901,8 @@ void Graphics::BlitDataTexture()
 	{
 		GLCheckError();
 	}
-   	glBlitFramebuffer(0, 0, m_nRenderWidth, m_nRenderHeight, 0, 0, m_nRenderWidth, m_nRenderHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-	if(m_bDebugOpenGL && m_bDevMode)
-	{
-		GLCheckError();
-	}
 
-	// reset read buffer to color_attachment0 in order for visuals to appear on
-	// screen. Not sure why I need to do this. TODO: Find out why this is necessary
-	glReadBuffer(GL_COLOR_ATTACHMENT0);
+   	glBlitFramebuffer(0, 0, m_nRenderWidth, m_nRenderHeight, 0, 0, m_nRenderWidth, m_nRenderHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 	if(m_bDebugOpenGL && m_bDevMode)
 	{
 		GLCheckError();
@@ -928,8 +942,8 @@ bool Graphics::BRenderFrame(std::unique_ptr<VR_Manager>& vrm)
 		RenderStereoTargets(vrm);
 		RenderCompanionWindow();
 		BlitDataTexture();
-		WriteDataToPBO();
-		TransferDataToCPU();	
+		if(!m_bWriteInProgress) WriteDataToPBO();
+		//TransferDataToCPU();	
 		m_fLastFrame = currentFrame;
 	} else if(!m_bDevMode && vrm == nullptr){
 		std::cout << "ERROR: vrm not assigned : RenderFrame()" << std::endl;
@@ -1100,6 +1114,10 @@ void Graphics::RenderControllerAxes(std::unique_ptr<VR_Manager>& vrm)
 void Graphics::WriteDataToPBO()
 {
 
+	std::cout << "WriteDataToPBO" << std::endl;
+
+	m_bWriteInProgress = true;
+
 	// clear error flag
 	// TODO: find out why I have to keep calling glGetError()
 	glGetError();
@@ -1111,16 +1129,41 @@ void Graphics::WriteDataToPBO()
 		GLCheckError();
 	}
 
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_gluiStorageFBO);
+	//glBindFramebuffer(GL_READ_FRAMEBUFFER, m_gluiStorageFBO);
+	//if(m_bDebugOpenGL && m_bDevMode)
+	//{
+	//	GLCheckError();
+	//}
+	//glReadBuffer(GL_COLOR_ATTACHMENT0);
+
+	glBindTexture(GL_TEXTURE_2D, m_gluiDataTexture2D);
 	if(m_bDebugOpenGL && m_bDevMode)
 	{
 		GLCheckError();
 	}
 
-	glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, 0);	
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, (GLvoid*)0);	
 	if(m_bDebugOpenGL && m_bDevMode)
 	{
 		GLCheckError();
+	}
+	
+	//make sure the values have been transferred to the buffer before
+	//clearing targets
+	GLsync sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+	if(!sync) std::cout << "ERROR: Graphics::WriteDataToPBO() - Sync failed" << std::endl;
+
+	GLint signal = 0; 
+	glGetSynciv(sync, GL_SYNC_STATUS, sizeof(GLint), NULL, &signal);
+
+	if(signal == GL_SIGNALED)
+	{
+		std::cout << "SIGNALED" << std::endl;
+		glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		m_bPBOFull = true;
+		m_bWriteInProgress = false;
+		glDeleteSync(sync);
 	}
 }
 
@@ -1133,7 +1176,7 @@ void Graphics::RenderStereoTargets(std::unique_ptr<VR_Manager>& vrm)
 	//glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glEnable(GL_MULTISAMPLE);
 
-	const GLenum buffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+	//const GLenum buffers[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
 
 	// to reset error flag. For some reason even though I have called glGetError()
 	// in BInitGL() the GL_INVALID_OPERATION was still being flagged 
@@ -1147,7 +1190,6 @@ void Graphics::RenderStereoTargets(std::unique_ptr<VR_Manager>& vrm)
 	{
 		GLCheckError();
 	}
-	glDrawBuffers(2, buffers);
  	glViewport(0, 0, m_nRenderWidth, m_nRenderHeight);
  	RenderScene(vr::Eye_Left, vrm);
  	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1155,6 +1197,7 @@ void Graphics::RenderStereoTargets(std::unique_ptr<VR_Manager>& vrm)
 	glDisable(GL_MULTISAMPLE);
 	 	
  	glBindFramebuffer(GL_READ_FRAMEBUFFER, leftEyeDesc.m_nRenderFramebufferId);
+	glReadBuffer(GL_COLOR_ATTACHMENT0);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, leftEyeDesc.m_nResolveFramebufferId);
 	
    	glBlitFramebuffer(0, 0, m_nRenderWidth, m_nRenderHeight, 0, 0, m_nRenderWidth, m_nRenderHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
@@ -1168,7 +1211,7 @@ void Graphics::RenderStereoTargets(std::unique_ptr<VR_Manager>& vrm)
 		
 		// Right Eye
 		glBindFramebuffer(GL_FRAMEBUFFER, rightEyeDesc.m_nRenderFramebufferId);
-		glDrawBuffers(2, buffers);
+		//glDrawBuffers(2, buffers);
 		glViewport(0, 0, m_nRenderWidth, m_nRenderHeight);
 		RenderScene(vr::Eye_Right, vrm);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);

@@ -202,6 +202,14 @@ private:
 
 	// vector to store floats from pbo
 	std::vector<float> shaderData;
+
+	//set draw buffer for storage fbo
+	GLenum buf[1];
+	GLenum buffers[2];
+	
+	//boolean flag to indicate PBO has data
+	bool m_bPBOFull;
+	bool m_bWriteInProgress;
 };
 
 
