@@ -69,7 +69,7 @@ in vec4 farPos;
 in vec2 texCoordsOut;
 
 layout(location = 0) out vec4 fragColorOut; 
-layout(location = 1) out float dataOut;
+layout(location = 1) out vec4 dataOut;
 
 //----------------------------------------------------------------------------------------
 // Ground plane SDF from https://www.iquilezles.org/www/articles/distfunctions/distfunctions.htm
@@ -600,7 +600,7 @@ void main()
     	vec2 dist = shortestDistanceToSurface(rayOrigin, rayDir, MIN_DIST, MAX_DIST);
 
 	// send object id for fragment to application 
-   	dataOut = 2.0; 
+   	dataOut.x = 2.0; 
 
     	// The closest point on the surface to the eyepoint along the view ray
     	vec3 p = rayOrigin + dist.x * rayDir;

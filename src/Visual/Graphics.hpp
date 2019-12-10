@@ -198,7 +198,7 @@ private:
 	//std::unique_ptr<m_fpDataArrayRow[]> m_fpDataArrayCol;
 
 	// handle for PBO
-	GLuint pbo;
+	GLuint pbo[2];
 
 	// vector to store floats from pbo
 	std::vector<float> shaderData;
@@ -212,6 +212,10 @@ private:
 	bool m_bWriteInProgress;
 	
 	GLsync sync;
+	void* dataSize;
+	bool m_bPboIndex;
+
+	GLuint m_gluiDummyTexture;
 };
 
 
