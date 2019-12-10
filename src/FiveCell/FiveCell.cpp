@@ -463,7 +463,7 @@ for(int y = 0; y < NUM_RAYS; y++){
 		escapeVals.push_back(rays);		
 	}
 
-	float avgVal;
+	float avgVal = 0.0f;
 
 	for(int i = 0; i < m_iMaxSteps; i++){
 

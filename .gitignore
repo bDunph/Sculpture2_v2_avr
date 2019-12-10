@@ -4,3 +4,5 @@ include/*
 .DS_Store
 bin/*
 lib/*
+.vs/*
+

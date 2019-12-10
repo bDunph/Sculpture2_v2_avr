@@ -4,6 +4,7 @@
 #include <windows.h>
 #endif
 
+#include <iostream>
 #include <cmath>
 #include <stdlib.h>
 #include <cstdlib>
@@ -206,11 +207,11 @@ bool Graphics::BInitGL(bool fullscreen)
 	
 
 	// Create temporary FBO to hold 2D data texture
-	bool done = BCreateStorageFBO();
-	if(!done) return false;
+	//bool done = BCreateStorageFBO();
+	//if(!done) return false;
 	
 	// Create Pixel buffer object to asynchronously read back from gpu
-	CreatePBO();
+	//CreatePBO();
 
 	return true;
 }
@@ -497,8 +498,8 @@ bool Graphics::BCreateStorageFBO()
 
 	glGenTextures(1, &m_gluiDataTexture2D);		
 	glBindTexture(GL_TEXTURE_2D, m_gluiDataTexture2D);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_R, GL_RED);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_R, GL_RED);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, m_nRenderWidth, m_nRenderHeight, 0, GL_RED, GL_FLOAT, nullptr);
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gluiDataTexture2D, 0);
@@ -850,7 +851,7 @@ void Graphics::UpdateSceneData(std::unique_ptr<VR_Manager>& vrm){
 		cameraPosition = m_vec3DevCamPos;
 	}
 
-	if(m_bPBOFull) TransferDataToCPU();	
+	//if(m_bPBOFull) TransferDataToCPU();	
 
 	//update variables for fiveCell
 	fiveCell.update(m_mat4CurrentViewMatrix, cameraPosition, machineLearning);
@@ -945,8 +946,8 @@ bool Graphics::BRenderFrame(std::unique_ptr<VR_Manager>& vrm)
 		DevProcessInput(m_pGLContext);
 		RenderStereoTargets(vrm);
 		RenderCompanionWindow();
-		BlitDataTexture();
-		WriteDataToPBO();
+		//BlitDataTexture();
+		//WriteDataToPBO();
 		//TransferDataToCPU();	
 		m_fLastFrame = currentFrame;
 	} else if(!m_bDevMode && vrm == nullptr){
