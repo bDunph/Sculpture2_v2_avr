@@ -208,7 +208,7 @@ private:
 	GLenum buffers[2];
 	
 	//boolean flag to indicate PBO has data
-	bool m_bPBOFull;
+	bool m_bPBOFirstFrame;
 	bool m_bWriteInProgress;
 	
 	GLsync sync;
