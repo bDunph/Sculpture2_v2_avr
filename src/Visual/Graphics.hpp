@@ -63,7 +63,7 @@ private:
 	GLuint m_gluiDataTexture2D;
 
 	bool BCreateStorageFBO();
-	bool BCreateFrameBuffer(FramebufferDesc& framebufferDesc);
+	bool BCreateFrameBuffer(FramebufferDesc& framebufferDesc, bool leftEye);
 	void BlitDataTexture();
 
 	glm::mat4 m_mat4CurrentViewMatrix;
@@ -206,6 +206,7 @@ private:
 	//set draw buffer for storage fbo
 	GLenum buf[1];
 	GLenum buffers[2];
+	GLenum rightBuffer[1];
 	
 	//boolean flag to indicate PBO has data
 	bool m_bPBOFirstFrame;

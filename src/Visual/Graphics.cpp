@@ -205,10 +205,6 @@ bool Graphics::BInitGL(bool fullscreen)
 		m_nRenderHeight = m_nCompanionWindowHeight; 
 	}
 	
-	
-
-		
-	
 	return true;
 }
 
@@ -432,31 +428,32 @@ bool Graphics::BSetupStereoRenderTargets(std::unique_ptr<VR_Manager>& vrm)
 	if (!m_bDevMode && vrm != nullptr)
 	{
 		vrm->m_pHMD->GetRecommendedRenderTargetSize( &m_nRenderWidth, &m_nRenderHeight );
-	} else if (!m_bDevMode && vrm == nullptr)
+	} 
+	else if (!m_bDevMode && vrm == nullptr)
 	{
 		return false;
 	}
 
-	float* dummyTex = new float[m_nRenderWidth * m_nRenderHeight * sizeof(float)];
-	for(int i = 0; i < (m_nRenderWidth * m_nRenderHeight * sizeof(float)); i++)
-	{
-		dummyTex[i] = 0.4f;
-	}
+	//float* dummyTex = new float[m_nRenderWidth * m_nRenderHeight * sizeof(float)];
+	//for(int i = 0; i < (m_nRenderWidth * m_nRenderHeight * sizeof(float)); i++)
+	//{
+	//	dummyTex[i] = 0.4f;
+	//}
 	//std::cout << "DummyTex val : " << dummyTex[340] << std::endl;
-	glGetError();
+	//glGetError();
 	//test texture for pbo
-	glGenTextures(1, &m_gluiDummyTexture);
-	GLCheckError();
-	glBindTexture(GL_TEXTURE_2D, m_gluiDummyTexture);
-	GLCheckError();
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	GLCheckError();
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-	GLCheckError();
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, m_nRenderWidth, m_nRenderHeight, 0, GL_RED, GL_FLOAT, dummyTex);
-	GLCheckError();
-	glBindTexture(GL_TEXTURE_2D, 0);
-	GLCheckError();
+	//glGenTextures(1, &m_gluiDummyTexture);
+	//GLCheckError();
+	//glBindTexture(GL_TEXTURE_2D, m_gluiDummyTexture);
+	//GLCheckError();
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	//GLCheckError();
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+	//GLCheckError();
+	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, m_nRenderWidth, m_nRenderHeight, 0, GL_RED, GL_FLOAT, dummyTex);
+	//GLCheckError();
+	//glBindTexture(GL_TEXTURE_2D, 0);
+	//GLCheckError();
 
 	// Create temporary FBO to hold 2D data texture
 	bool done = BCreateStorageFBO();
@@ -465,18 +462,19 @@ bool Graphics::BSetupStereoRenderTargets(std::unique_ptr<VR_Manager>& vrm)
 	// Create Pixel buffer object to asynchronously read back from gpu
 	CreatePBO();
 
-	bool fboL = BCreateFrameBuffer(leftEyeDesc);
-
-	if(!m_bDevMode)
-	{
-		bool fboR = BCreateFrameBuffer(rightEyeDesc);
-
-		if(!fboL || !fboR) return false;
-	}
+	bool fboL = BCreateFrameBuffer(leftEyeDesc, true);
 
 	if(!fboL) return false;
 
-	delete[] dummyTex;
+	if(!m_bDevMode)
+	{
+		bool fboR = BCreateFrameBuffer(rightEyeDesc, false);
+
+		if(!fboR) return false;
+	}
+
+
+	//delete[] dummyTex;
 
 	return true;
 }
@@ -578,7 +576,7 @@ bool Graphics::BCreateStorageFBO()
 // colour attachment. Returns true if the buffers were set up.
 // Returns false if the setup failed.
 //-----------------------------------------------------------------------------
-bool Graphics::BCreateFrameBuffer(FramebufferDesc& framebufferDesc)
+bool Graphics::BCreateFrameBuffer(FramebufferDesc& framebufferDesc, bool leftEye)
 {
 	glGenFramebuffers(1, &framebufferDesc.m_nRenderFramebufferId );
 	glBindFramebuffer(GL_FRAMEBUFFER, framebufferDesc.m_nRenderFramebufferId);
@@ -594,24 +592,26 @@ bool Graphics::BCreateFrameBuffer(FramebufferDesc& framebufferDesc)
 	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA8, m_nRenderWidth, m_nRenderHeight, true);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, framebufferDesc.m_nRenderTextureId, 0);
 
-	//create a texture to hold data from shader and attach to gl_color_attachment1
-	glGenTextures(1, &framebufferDesc.m_gluiDataTexture2DMulti);
-	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, framebufferDesc.m_gluiDataTexture2DMulti);
-	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA8, m_nRenderWidth, m_nRenderHeight, true); 
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D_MULTISAMPLE, framebufferDesc.m_gluiDataTexture2DMulti, 0);
+	if(leftEye)
+	{
+		//create a texture to hold data from shader and attach to gl_color_attachment1
+		glGenTextures(1, &framebufferDesc.m_gluiDataTexture2DMulti);
+		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, framebufferDesc.m_gluiDataTexture2DMulti);
+		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA8, m_nRenderWidth, m_nRenderHeight, true); 
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D_MULTISAMPLE, framebufferDesc.m_gluiDataTexture2DMulti, 0);
 
-	// set up the two textures as draw buffers
-	buffers[0] = GL_COLOR_ATTACHMENT0;
-	buffers[1] = GL_COLOR_ATTACHMENT1;
-	glDrawBuffers(2, buffers);
+		// set up the two textures as draw buffers
+		buffers[0] = GL_COLOR_ATTACHMENT0;
+		buffers[1] = GL_COLOR_ATTACHMENT1;
+		glDrawBuffers(2, buffers);
 
-	//create a dynamically allocated 2D array to hold dataTexture values when they are read back to CPU
-	//size_t rowSize = m_nRenderWidth, colSize = m_nRenderHeight;
-
-	//m_fpDataArrayCol = std::unique_ptr<m_fpDataArrayRow[]>(new m_fpDataArrayRow[rowSize]);
-	//for(size_t i = 0; i < rowSize; ++i) 
-	//	m_fpDataArrayCol[i] = m_fpDataArrayRow(new float[colSize]);
- 
+	}
+	else if(!leftEye)
+	{
+		rightBuffer[0] = GL_COLOR_ATTACHMENT0;
+		glDrawBuffers(1, rightBuffer);
+	}
+	
 	//check FBO status before setting up m_nResolveFramebufferId
 	auto status1 = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if (status1 != GL_FRAMEBUFFER_COMPLETE)
@@ -849,7 +849,7 @@ void Graphics::TransferDataToCPU()
 	// copy memory block from pixel buffer object to memory block on cpu
 	memcpy(dataSize, pboData, m_nRenderWidth * m_nRenderHeight * 4 * sizeof(unsigned char));
 
-	std::cout << "PBO : " << static_cast<unsigned>(dataSize[4]) << std::endl;
+	std::cout << "PBO : " << static_cast<unsigned>(dataSize[8]) << std::endl;
 
 	if(glUnmapBuffer(GL_PIXEL_PACK_BUFFER) != GL_TRUE)
 		std::cout << "ERROR: PBO failed to unmap: Graphics::TransferDataToCPU()" << std::endl;
@@ -875,7 +875,7 @@ void Graphics::UpdateSceneData(std::unique_ptr<VR_Manager>& vrm){
 		cameraPosition = m_vec3DevCamPos;
 	}
 
-	if(!m_bPBOFirstFrame) TransferDataToCPU();	
+	//if(!m_bPBOFirstFrame) TransferDataToCPU();	
 
 	//update variables for fiveCell
 	fiveCell.update(m_mat4CurrentViewMatrix, cameraPosition, machineLearning);
@@ -957,8 +957,8 @@ bool Graphics::BRenderFrame(std::unique_ptr<VR_Manager>& vrm)
 		GetControllerEvents(vrm);
 		RenderControllerAxes(vrm);
 		RenderStereoTargets(vrm);
-		BlitDataTexture();
-		WriteDataToPBO();
+		//BlitDataTexture();
+		//WriteDataToPBO();
 		RenderCompanionWindow();
 
 		vr::Texture_t leftEyeTexture = {(void*)(uintptr_t)leftEyeDesc.m_nResolveTextureId, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
@@ -971,8 +971,8 @@ bool Graphics::BRenderFrame(std::unique_ptr<VR_Manager>& vrm)
 		m_fDeltaTime = currentFrame - m_fLastFrame;
 		DevProcessInput(m_pGLContext);
 		RenderStereoTargets(vrm);
-		BlitDataTexture();
-		WriteDataToPBO();
+		//BlitDataTexture();
+		//WriteDataToPBO();
 		RenderCompanionWindow();
 		m_fLastFrame = currentFrame;
 	} else if(!m_bDevMode && vrm == nullptr){
@@ -1021,6 +1021,9 @@ bool Graphics::BRenderFrame(std::unique_ptr<VR_Manager>& vrm)
 		}
 
 		vrm->UpdateHMDMatrixPose();
+		// switch PBOs
+		m_bPboIndex = !m_bPboIndex;
+
 		return false;
 	} 
 
@@ -1161,13 +1164,13 @@ void Graphics::WriteDataToPBO()
 	{
 		GLCheckError();
 	}
-
+	
 	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);	
 	if(m_bDebugOpenGL && m_bDevMode)
 	{
 		GLCheckError();
 	}
-	
+
 	glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	m_bPBOFirstFrame = false;
